@@ -1,20 +1,19 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
 
-// Імпорт сторінок-заглушок
+// Імпорт сторінок
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Ideas } from './pages/Ideas';
 
-// Імпорт зображень
+// Імпорт зображень (Home)
 import present1 from './assets/present_1.png';
 import present2 from './assets/present_2.png';
 import blam from './assets/blam.png';
 
-// Компонент головної сторінки (Home)
 const Home = () => (
   <main className="content-area flex-grow-1 p-5 position-relative">
     <div className="left-decor">
@@ -37,52 +36,61 @@ const Home = () => (
   </main>
 );
 
-const App = () => {
-  return (
-    <Router>
-      <div className="app-wrapper min-vh-100 d-flex flex-column">
-        
-        {/* Header з логотипом */}
-        <header className="py-3 px-4 bg-white border-bottom shadow-sm">
-          <NavLink to="/" className="text-decoration-none">
-            <h2 className="logo-text m-0">Dream<br/>Space</h2>
-          </NavLink>
-        </header>
+const AppContent = () => {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/register' || location.pathname === '/login';
 
-        <div className="d-flex flex-grow-1 position-relative">
-          
-          {/* Бічна панель з навігацією */}
-          <aside className="sidebar px-4 py-5 bg-white">
+  return (
+    <div className="app-container min-vh-100 d-flex flex-column">
+      
+      {/* Логотип завжди зверху у своїй зоні */}
+      <header className="header-zone py-3 px-4 bg-white border-bottom shadow-sm">
+        <NavLink to="/" className="text-decoration-none">
+          <h2 className="logo-text m-0">Dream<br/>Space</h2>
+        </NavLink>
+      </header>
+
+      <div className="main-layout d-flex flex-grow-1">
+        
+        {/* Бічна панель: відображається ТІЛЬКИ якщо це не сторінка реєстрації/входу */}
+        {!isAuthPage && (
+          <aside className="sidebar-zone px-4 py-5 bg-white border-right">
             <nav className="nav flex-column gap-3">
               <NavLink to="/register" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
                 <i className="bi bi-person-plus"></i>
                 <span>Реєстрація</span>
               </NavLink>
-              
               <NavLink to="/login" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
                 <i className="bi bi-key"></i>
                 <span>Вхід</span>
               </NavLink>
-              
               <NavLink to="/ideas" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
                 <i className="bi bi-star"></i>
                 <span>Ідеї</span>
               </NavLink>
             </nav>
           </aside>
+        )}
 
-          {/* Відображення контенту залежно від шляху */}
+        {/* Область контенту: займає весь простір (flex-grow-1) */}
+        <div className="content-wrapper flex-grow-1 d-flex flex-column">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/ideas" element={<Ideas />} />
           </Routes>
-          
         </div>
+        
       </div>
-    </Router>
+    </div>
   );
 };
+
+const App = () => (
+  <Router>
+    <AppContent />
+  </Router>
+);
 
 export default App;

@@ -3,12 +3,35 @@
 
 :root {
   --ds-purple: #7b61ff;
+  --header-height: 82px; /* Фіксуємо висоту хедера для розрахунків */
 }
 
 body {
   font-family: 'Raleway', sans-serif;
   margin: 0;
   overflow-x: hidden;
+  background-color: #fcfcfc;
+}
+
+/* Структура компонування */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header-zone {
+  height: var(--header-height);
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.main-layout {
+  display: flex;
+  flex: 1; /* Заповнює простір, що залишився */
 }
 
 /* Логотип */
@@ -19,9 +42,11 @@ body {
   line-height: 1;
 }
 
-/* Sidebar */
-.sidebar {
+/* Sidebar (Бічна панель) */
+.sidebar-zone {
   width: 250px;
+  min-width: 250px;
+  background: white;
   border-right: 1px solid #f0f0f0;
   z-index: 10;
 }
@@ -39,24 +64,32 @@ body {
 }
 
 .nav-link i { font-size: 1.4rem; }
-
 .nav-link:hover { color: var(--ds-purple); background: #f8f7ff; }
-
 .nav-link.active {
   background-color: var(--ds-purple) !important;
   color: white !important;
 }
 
-/* Контент */
+/* Область контенту */
+.content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Головна сторінка (Home) */
 .content-area {
-  background-color: #fcfcfc;
+  padding: 3rem;
+  position: relative;
+  flex: 1;
 }
 
 .text-content {
   position: relative;
   z-index: 5;
   max-width: 850px;
-  margin-left: 50px; /* Відступ, щоб не налізало на пляму */
+  margin-left: 50px;
 }
 
 .main-title {
@@ -86,7 +119,7 @@ body {
   line-height: 1.2;
 }
 
-/* Декорації (Картинки) */
+/* Декорації головної сторінки */
 .left-decor {
   position: absolute;
   left: -100px;
@@ -96,21 +129,14 @@ body {
   z-index: 1;
 }
 
-.img-blam {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-}
-
+.img-blam { position: absolute; bottom: 0; left: 0; width: 100%; }
 .img-present-1 {
   position: absolute;
-  bottom: 260px; /* Регулюйте, щоб він був "на" плямі */
+  bottom: 260px;
   left: 110px;
   width: 180px;
   transform: rotate(-5deg);
 }
-
 .img-present-2 {
   position: absolute;
   bottom: 0;
@@ -119,7 +145,62 @@ body {
   z-index: 2;
 }
 
-/* Адаптація для планшетів */
+/* СТОРІНКА РЕЄСТРАЦІЇ (як на макеті) */
+.register-page-wrapper {
+  background-color: #f4f7ff; /* Світлий фон як на скриншоті */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* Займає весь простір, коли бічної панелі немає */
+  height: 100%;
+  flex: 1;
+}
+
+.register-card {
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #e0e6ed;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.register-form-title {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 700;
+  color: #444;
+  margin-bottom: 1.5rem;
+}
+
+.custom-input {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background-color: white;
+}
+
+.btn-purple {
+  background-color: #936fd1; /* Колір кнопки з макету */
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.btn-purple:hover { background-color: #7b5ab8; }
+
+.btn-light-gray {
+  background-color: #e9ecef;
+  border: none;
+  color: #6c757d;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+/* Адаптивність */
 @media (max-width: 1100px) {
   .left-decor { opacity: 0.4; }
   .img-present-2 { width: 250px; }
