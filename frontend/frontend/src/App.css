@@ -205,3 +205,29 @@ body {
   .left-decor { opacity: 0.4; }
   .img-present-2 { width: 250px; }
 }
+
+/* Червоний контур для помилкового поля */
+.is-invalid-field {
+  border: 1px solid #dc3545 !important;
+}
+
+/* Текст помилки під полем */
+.error-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Стиль для кнопки переходу (сірий) */
+.btn-light-gray {
+  background-color: #e9ecef;
+  border: none;
+  color: #6c757d;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.btn-light-gray:hover {
+  background-color: #dee2e6;
+}
