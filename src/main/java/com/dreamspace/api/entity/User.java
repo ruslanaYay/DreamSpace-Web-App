@@ -1,28 +1,32 @@
 package com.dreamspace.api.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name="user")
 public class User {
     @Id
-    @Column(name="id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id_user")
     private Long id;
 
-    @Column(name="firstName", length = 255, nullable = false)
+    @Column(name="first_name", length = 50, nullable = false)
     private String firstName;
 
-    @Column(name="lastName", length = 255, nullable = false)
+    @Column(name="last_name", length = 50, nullable = false)
     private String lastName;
 
     @Column(name="email", length=255, nullable = false, unique = true)
     private String email;
 
-    @Column(name="password", length=255, nullable = false)
+    @Column(name="password_hash", length=255, nullable = false)
     private String password;
 
-    public User(long id, String firstName, String lastName, String email, String password) {
+    @Column(name="created_at", nullable = false, updatable = false, insertable = false)
+    private LocalDateTime createdAt;
+
+    public User(Long id, String firstName, String lastName, String email, String password) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -37,14 +41,13 @@ public class User {
         this.password = password;
     }
 
-    public User() {
-    }
+    public User() {}
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -80,6 +83,10 @@ public class User {
         this.password = password;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -88,6 +95,7 @@ public class User {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }
