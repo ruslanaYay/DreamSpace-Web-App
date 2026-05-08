@@ -30,7 +30,7 @@ public class User {
     @Column(name="password_hash", length=255, nullable = false)
     private String password;
 
-    @Column(name="created_at", nullable = false, updatable = false, insertable = false)
+    @Column(name="created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public User(Long id, Role role, String firstName, String lastName, String email, String password) {

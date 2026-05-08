@@ -34,6 +34,7 @@ public class UserServiceImpl implements UserService {
                 //Хешування пароля
                 this.passwordEncoder.encode(userDTO.getPassword())
         );
+        user.setRole(User.Role.USER);
         return userRepository.save(user);
     }
 }
