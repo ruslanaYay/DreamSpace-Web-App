@@ -24,9 +24,12 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody UserDTO userDTO) {
         User registeredUser = userService.registerUser(userDTO);
 
-        String token = jwtService.generateToken(registeredUser.getEmail());
+        String token = jwtService.generateToken(registeredUser.getEmail(), registeredUser.getRole().name());
         AuthResponse response = new AuthResponse(
-                registeredUser.getId(), registeredUser.getEmail(), token);
+                registeredUser.getId(),
+                registeredUser.getEmail(),
+                token,
+                registeredUser.getRole().name());
 
         return  new ResponseEntity<>(response, HttpStatus.CREATED);
     }
