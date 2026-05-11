@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
@@ -38,21 +38,24 @@ const Home = () => (
 
 const AppContent = () => {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/register' || location.pathname === '/login';
+  // Визначаємо, чи є поточна сторінка частиною процесу авторизації
+  const isAuthPage = location.pathname === '/register' || location.pathname === '/login' || location.pathname === '/resetpassword';
 
   return (
     <div className="app-container min-vh-100 d-flex flex-column">
       
-      {/* Логотип завжди зверху у своїй зоні */}
-      <header className="header-zone py-3 px-4 bg-white border-bottom shadow-sm">
-        <NavLink to="/" className="text-decoration-none">
-          <h2 className="logo-text m-0">Dream<br/>Space</h2>
-        </NavLink>
-      </header>
+      {/* Хедер та Сайдбар відображаємо тільки для Home та внутрішніх сторінок (напр. Ideas) */}
+      {!isAuthPage && (
+        <header className="header-zone py-3 px-4 bg-white border-bottom shadow-sm">
+          <NavLink to="/" className="text-decoration-none">
+            <h2 className="logo-text m-0">Dream<br/>Space</h2>
+          </NavLink>
+        </header>
+      )}
 
       <div className="main-layout d-flex flex-grow-1">
         
-        {/* Бічна панель: відображається ТІЛЬКИ якщо це не сторінка реєстрації/входу */}
+        {/* Бічна панель: відображається ТІЛЬКИ на не-авторизаційних сторінках */}
         {!isAuthPage && (
           <aside className="sidebar-zone px-4 py-5 bg-white border-right">
             <nav className="nav flex-column gap-3">
@@ -72,13 +75,16 @@ const AppContent = () => {
           </aside>
         )}
 
-        {/* Область контенту: займає весь простір (flex-grow-1) */}
-        <div className="content-wrapper flex-grow-1 d-flex flex-column">
+        {/* Область контенту: займає 100% ширини на сторінках Login/Register */}
+        <div className={`content-wrapper flex-grow-1 d-flex flex-column ${isAuthPage ? 'auth-bg' : ''}`}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/ideas" element={<Ideas />} />
+            <Route path="/resetpassword" element={<div className="p-5">Сторінка відновлення пароля (заглушка)</div>} />
+            {/* Перенаправлення на 404 або Home для неіснуючих шляхів */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
         
