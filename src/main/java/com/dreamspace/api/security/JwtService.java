@@ -1,5 +1,6 @@
 package com.dreamspace.api.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -32,23 +33,22 @@ public class JwtService {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-    //Отримання пошти з токену
-    public String extractEmail(String token) {
+
+    public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
+    }
+
+    //Отримання пошти з токену
+    public String extractEmail(String token) {
+        return extractClaims(token).getSubject();
     }
     //Отримання ролі з токену
     public String extractRole(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
+        return extractClaims(token).get("role", String.class);
     }
     //Перевірка валідності
     public boolean isTokenValid(String token) {
