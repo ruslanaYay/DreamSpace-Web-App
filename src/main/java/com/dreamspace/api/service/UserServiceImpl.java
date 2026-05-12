@@ -1,12 +1,17 @@
 package com.dreamspace.api.service;
 
+import com.dreamspace.api.dto.AuthResponse;
+import com.dreamspace.api.dto.LoginDTO;
 import com.dreamspace.api.entity.User;
 import com.dreamspace.api.dto.UserDTO;
+import com.dreamspace.api.exception.InvalidPasswordException;
 import com.dreamspace.api.exception.UserAlreadyExistsException;
+import com.dreamspace.api.exception.UserNotFoundException;
 import com.dreamspace.api.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 import java.util.Optional;
 
@@ -36,5 +41,20 @@ public class UserServiceImpl implements UserService {
         );
         user.setRole(User.Role.USER);
         return userRepository.save(user);
+    }
+
+    @Override
+    public User loginUser(LoginDTO loginDTO) {
+        //Пошук за email
+        Optional<User> optionalUser = userRepository.findByEmail(loginDTO.getEmail());
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+        User user = optionalUser.get();
+        //Перевірка відповідності пароля
+        if(!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+            throw new InvalidPasswordException();
+        }
+        return user;
     }
 }

@@ -1,6 +1,7 @@
 package com.dreamspace.api.controller;
 
 import com.dreamspace.api.dto.AuthResponse;
+import com.dreamspace.api.dto.LoginDTO;
 import com.dreamspace.api.dto.UserDTO;
 import com.dreamspace.api.entity.User;
 import com.dreamspace.api.security.JwtService;
@@ -32,5 +33,19 @@ public class AuthController {
                 registeredUser.getRole().name());
 
         return  new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping(path="/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO) {
+        //Сервіс перевіряє дані
+        User user = userService.loginUser(loginDTO);
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+        AuthResponse response = new AuthResponse(
+                user.getId(),
+                user.getEmail(),
+                token,
+                user.getRole().name());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
