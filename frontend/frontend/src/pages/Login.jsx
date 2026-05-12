@@ -11,6 +11,7 @@ export const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    // Очищуємо помилку при зміні тексту в полі
     if (errors[name]) setErrors({ ...errors, [name]: '' });
   };
 
@@ -23,16 +24,19 @@ export const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 1. Клієнтська валідація на порожні поля
     const validationErrors = validateForm();
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
     setIsLoading(true);
+    setErrors({}); 
+
     try {
-      const response = await fetch('http://localhost:8086/api/auth/login', {
+      const response = await fetch('http://localhost:8085/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -41,28 +45,47 @@ export const Login = () => {
       const data = await response.json();
 
       if (response.status === 200) {
+        // --- ОБРОБКА УСПІХУ (200 OK) ---
+        // Зберігаємо дані з AuthResponse (бекенд)
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
-        navigate('/ideas');
-      } else if (response.status === 404) {
-        setErrors({ email: "Користувача з такими даними не знайдено" });
-      } else if (response.status === 401) {
-        setErrors({ password: "Неправильний пароль" });
+        
+        console.log(`Вхід успішний. Роль: ${data.role}`);
+
+        // Логіка перенаправлення згідно з роллю
+        if (data.role === 'ADMIN') {
+          navigate('/admin'); // Адмін-панель
+        } else {
+          navigate('/ideas'); // Особистий кабінет користувача
+        }
+      } 
+      else if (response.status === 404) {
+        // Якщо користувача не знайдено (Email невірний)
+        setErrors({ email: data.message || "Користувача з таким Email не знайдено" });
+      } 
+      else if (response.status === 401) {
+        // Якщо пароль невірний
+        setErrors({ password: data.message || "Неправильний пароль" });
+      } 
+      else if (response.status === 400) {
+        // Помилки валідації (наприклад, невірний формат пошти)
+        setErrors(data); 
       }
     } catch (error) {
-      console.error("Помилка:", error);
-      alert("Сервер не відповідає");
+      console.error("Помилка мережі:", error);
+      alert("Не вдалося з'єднатися з сервером. Переконайтеся, що бекенд запущений на порті 8085.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="register-page-wrapper">
+    <div className="register-page-wrapper auth-bg">
       <div className="register-card shadow-sm">
         <h2 className="register-form-title">Вхід</h2>
         
         <form className="mt-4" onSubmit={handleSubmit} noValidate>
+          {/* Поле Email */}
           <div className="mb-3 text-start">
             <label className="form-label fw-bold">Email *</label>
             <input 
@@ -72,10 +95,12 @@ export const Login = () => {
               placeholder="Значення"
               value={formData.email}
               onChange={handleChange}
+              disabled={isLoading}
             />
             {errors.email && <div className="error-message">{errors.email}</div>}
           </div>
 
+          {/* Поле Пароль */}
           <div className="mb-3 text-start">
             <label className="form-label fw-bold">Пароль *</label>
             <input 
@@ -85,12 +110,13 @@ export const Login = () => {
               placeholder="Значення"
               value={formData.password}
               onChange={handleChange}
+              disabled={isLoading}
             />
             {errors.password && <div className="error-message">{errors.password}</div>}
           </div>
 
           <div className="text-start mb-4">
-            <Link to="/resetpassword" style={{ color: '#6c757d', fontSize: '0.9rem' }}>
+            <Link to="/resetpassword" style={{ color: '#6c757d', fontSize: '0.9rem', textDecoration: 'none' }}>
               Забули пароль?
             </Link>
           </div>
@@ -103,6 +129,7 @@ export const Login = () => {
             type="button" 
             className="btn btn-light-gray w-100 py-2"
             onClick={() => navigate('/register')}
+            disabled={isLoading}
           >
             Не маю облікового запису
           </button>

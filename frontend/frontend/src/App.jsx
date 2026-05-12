@@ -8,6 +8,16 @@ import './App.css';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Ideas } from './pages/Ideas';
+import { Admin } from './pages/Admin';
+
+// Всередині компонента AppContent (або перед ним) додаємо логіку захисту:
+const ProtectedAdminRoute = ({ children }) => {
+  const role = localStorage.getItem('role');
+  if (role !== 'ADMIN') {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 // Імпорт зображень (Home)
 import present1 from './assets/present_1.png';
@@ -83,6 +93,14 @@ const AppContent = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/resetpassword" element={<div className="p-5">Сторінка відновлення пароля (заглушка)</div>} />
+            {/* Захищений маршрут для Адміна */}
+            <Route 
+              path="/admin" 
+              element={
+                  <ProtectedAdminRoute>
+                    <Admin />
+                  </ProtectedAdminRoute>
+              } />
             {/* Перенаправлення на 404 або Home для неіснуючих шляхів */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
