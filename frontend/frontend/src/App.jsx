@@ -10,12 +10,15 @@ import { Register } from './pages/Register';
 import { Ideas } from './pages/Ideas';
 import { Admin } from './pages/Admin';
 
-// Всередині компонента AppContent (або перед ним) додаємо логіку захисту:
+// Компонент-обгортка для захисту маршруту
 const ProtectedAdminRoute = ({ children }) => {
   const role = localStorage.getItem('role');
+  
+  // Якщо роль не ADMIN, перенаправляємо на головну
   if (role !== 'ADMIN') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
+  
   return children;
 };
 
@@ -97,9 +100,9 @@ const AppContent = () => {
             <Route 
               path="/admin" 
               element={
-                  <ProtectedAdminRoute>
-                    <Admin />
-                  </ProtectedAdminRoute>
+                <ProtectedAdminRoute>
+                  <Admin />
+                </ProtectedAdminRoute>
               } />
             {/* Перенаправлення на 404 або Home для неіснуючих шляхів */}
             <Route path="*" element={<Navigate to="/" />} />
