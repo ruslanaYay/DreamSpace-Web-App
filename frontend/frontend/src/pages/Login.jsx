@@ -56,7 +56,7 @@ export const Login = () => {
         if (data.role === 'ADMIN') {
           navigate('/admin'); // Адмін-панель
         } else {
-          navigate('/ideas'); // Особистий кабінет користувача
+          navigate('/wishlists'); // Особистий кабінет користувача
         }
       } 
       else if (response.status === 404) {
