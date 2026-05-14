@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export const Wishlists = () => {
-  // Тепер тут порожній масив. Дані будуть приходити з БД пізніше.
   const [wishlists, setWishlists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -13,7 +12,6 @@ export const Wishlists = () => {
         <div className="col-12">
           <h2 className="fw-bold mb-4">Вішлісти</h2>
           
-          {/* Блок пошуку */}
           <div className="search-container position-relative mb-5" style={{ maxWidth: '400px' }}>
             <input
               type="text"
@@ -37,30 +35,36 @@ export const Wishlists = () => {
           </div>
         </Link>
 
-        {/* Рендеринг карток вішлістів */}
+        {/* Рендеринг реальних карток */}
         {wishlists.map((list) => (
           <div key={list.id} className="wishlist-item">
             <div className="wishlist-card shadow-sm position-relative mb-2">
-              {/* Іконка статусу в кутку */}
+              
+              {/* 1. Оновлено іконки під ваш PrivacyStatus Enum */}
               <div className="status-icon position-absolute top-0 start-0 m-3">
-                <i className={`bi ${list.status === 'private' ? 'bi-eye-slash' : list.status === 'public' ? 'bi-eye' : 'bi-lock'}`}></i>
+                <i className={`bi ${
+                  list.privacyStatus === 'PRIVATE' ? 'bi-eye-slash' : 
+                  list.privacyStatus === 'PUBLIC' ? 'bi-eye' : 
+                  'bi-link-45deg' /* Для статусу LINK */
+                }`}></i>
               </div>
-              {/* Кнопка меню (три крапки) */}
+
               <div className="menu-icon position-absolute top-0 end-0 m-2">
                 <button className="btn btn-link text-muted p-1">
                   <i className="bi bi-three-dots"></i>
                 </button>
               </div>
               
-              {/* Заглушка для зображення */}
               <div className="card-image-placeholder d-flex align-items-center justify-content-center">
                 <i className="bi bi-image text-light fs-1"></i>
               </div>
             </div>
-            {/* Текстова інформація під карткою */}
+
             <div className="card-info ps-1">
-              <h6 className="mb-0 fw-bold">{list.title}</h6>
-              <small className="text-muted">{list.count} бажань</small>
+              {/* 2. Використовуємо list.name (як у Entity)*/}
+              <h6 className="mb-0 fw-bold">{list.name}</h6>
+              {/* 3. Кількість бажань (поки що за замовчуванням, якщо немає в Entity) */}
+              <small className="text-muted">{list.itemsCount || 0} бажань</small>
             </div>
           </div>
         ))}
