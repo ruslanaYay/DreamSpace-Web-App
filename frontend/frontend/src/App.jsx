@@ -9,6 +9,9 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Ideas } from './pages/Ideas';
 import { Admin } from './pages/Admin';
+import { Wishlists } from './pages/Wishlists';
+import { Sidebar } from './components/Sidebar';
+import { UserAvatar } from './components/UserAvatar';
 
 // Компонент-обгортка для захисту маршруту
 const ProtectedAdminRoute = ({ children }) => {
@@ -51,64 +54,101 @@ const Home = () => (
 
 const AppContent = () => {
   const location = useLocation();
-  // Визначаємо, чи є поточна сторінка частиною процесу авторизації
-  const isAuthPage = location.pathname === '/register' || location.pathname === '/login' || location.pathname === '/resetpassword';
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  const user = {
+    name: localStorage.getItem('userName') || 'Гість',
+    photoUrl: localStorage.getItem('userPhoto')
+  };
+
+  const isAuthPage = ['/register', '/login', '/resetpassword'].includes(location.pathname);
 
   return (
     <div className="app-container min-vh-100 d-flex flex-column">
       
-      {/* Хедер та Сайдбар відображаємо тільки для Home та внутрішніх сторінок (напр. Ideas) */}
       {!isAuthPage && (
-        <header className="header-zone py-3 px-4 bg-white border-bottom shadow-sm">
+        <header className="header-zone py-3 px-4 bg-white border-bottom shadow-sm d-flex justify-content-between align-items-center">
           <NavLink to="/" className="text-decoration-none">
             <h2 className="logo-text m-0">Dream<br/>Space</h2>
           </NavLink>
+          
+          {/* Аватар з'являється, якщо користувач залогінений */}
+          {token && (
+            <div className="ms-auto">
+              <UserAvatar user={user} />
+            </div>
+          )}
         </header>
       )}
 
       <div className="main-layout d-flex flex-grow-1">
         
-        {/* Бічна панель: відображається ТІЛЬКИ на не-авторизаційних сторінках */}
         {!isAuthPage && (
-          <aside className="sidebar-zone px-4 py-5 bg-white border-right">
+          <aside className="sidebar-zone px-4 py-5 bg-white border-right" style={{ width: '250px' }}>
             <nav className="nav flex-column gap-3">
-              <NavLink to="/register" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
-                <i className="bi bi-person-plus"></i>
-                <span>Реєстрація</span>
-              </NavLink>
-              <NavLink to="/login" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
-                <i className="bi bi-key"></i>
-                <span>Вхід</span>
-              </NavLink>
-              <NavLink to="/ideas" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
-                <i className="bi bi-star"></i>
-                <span>Ідеї</span>
-              </NavLink>
+              
+              {!token ? (
+                <>
+                  <NavLink to="/register" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
+                    <i className="bi bi-person-plus"></i> <span>Реєстрація</span>
+                  </NavLink>
+                  <NavLink to="/login" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
+                    <i className="bi bi-key"></i> <span>Вхід</span>
+                  </NavLink>
+                  <NavLink to="/ideas" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
+                    <i className="bi bi-star"></i> <span>Ідеї</span>
+                  </NavLink>
+                </>
+              ) : (
+                <>
+                  <NavLink to="/wishlists" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
+                    <i className="bi bi-book"></i> <span>Вішлісти</span>
+                  </NavLink>
+                  <NavLink to="/ideas" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
+                    <i className="bi bi-star"></i> <span>Ідеї</span>
+                  </NavLink>
+                  <NavLink to="/booked" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
+                    <i className="bi bi-gift"></i> <span>Заброньовані</span>
+                  </NavLink>
+                  <NavLink to="/profile" className={({isActive}) => `nav-link border-0 ${isActive ? 'active' : ''}`}>
+                    <i className="bi bi-person"></i> <span>Профіль</span>
+                  </NavLink>
+
+                  {role === 'ADMIN' && (
+                    <NavLink to="/admin" className={({isActive}) => `nav-link border-0 mt-4 text-danger ${isActive ? 'active' : ''}`}>
+                      <i className="bi bi-shield-lock"></i> <span>Адмін панель</span>
+                    </NavLink>
+                  )}
+                  
+                  <button 
+                    className="nav-link border-0 bg-transparent mt-auto text-muted text-start p-0"
+                    onClick={() => { localStorage.clear(); window.location.href = '/'; }}
+                  >
+                    <i className="bi bi-box-arrow-right"></i> <span>Вийти</span>
+                  </button>
+                </>
+              )}
             </nav>
           </aside>
         )}
 
-        {/* Область контенту: займає 100% ширини на сторінках Login/Register */}
         <div className={`content-wrapper flex-grow-1 d-flex flex-column ${isAuthPage ? 'auth-bg' : ''}`}>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route 
+              path="/" 
+              element={token ? <Navigate to="/wishlists" replace /> : <Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/ideas" element={<Ideas />} />
-            <Route path="/resetpassword" element={<div className="p-5">Сторінка відновлення пароля (заглушка)</div>} />
-            {/* Захищений маршрут для Адміна */}
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedAdminRoute>
-                  <Admin />
-                </ProtectedAdminRoute>
-              } />
-            {/* Перенаправлення на 404 або Home для неіснуючих шляхів */}
+            <Route path="/wishlists" element={<Wishlists/>}/>
+            <Route path="/wishlists/create" element={<div className="p-5"><h3>Сторінка створення вішліста (Заглушка)</h3></div>} />
+            <Route path="/booked" element={<div className="p-5">Сторінка Заброньованих</div>} />
+            <Route path="/profile" element={<div className="p-5">Сторінка Профілю</div>} />
+            <Route path="/admin" element={<ProtectedAdminRoute><Admin /></ProtectedAdminRoute>} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
-        
       </div>
     </div>
   );
