@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Raleway:wght@400;700&display=swap');
 
 :root {
-  --ds-purple: #7b61ff;
+  --ds-purple: #8A60C2;
   --header-height: 82px; /* Фіксуємо висоту хедера для розрахунків */
 }
 
@@ -182,7 +182,7 @@ body {
 }
 
 .btn-purple {
-  background-color: #936fd1; /* Колір кнопки з макету */
+  background-color: #8A60C2; /* Колір кнопки з макету */
   border: none;
   color: white;
   font-weight: 600;
@@ -190,7 +190,7 @@ body {
   transition: 0.3s;
 }
 
-.btn-purple:hover { background-color: #7b5ab8; }
+.btn-purple:hover { background-color: #7A51B1; }
 
 .btn-light-gray {
   background-color: #e9ecef;
@@ -269,7 +269,7 @@ body {
 .plus-icon {
   width: 60px;
   height: 60px;
-  background-color: #6f42c1; /* Фіолетовий з макета */
+  background-color: #8A60C2; /* Фіолетовий з макета */
   border-radius: 50%;
 }
 
