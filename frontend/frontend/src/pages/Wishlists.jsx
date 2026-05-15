@@ -20,7 +20,7 @@ export const Wishlists = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <i className="bi bi-search position-absolute top-50 end-0 translate-middle-x text-muted me-2"></i>
+            <i className="bi bi-search position-absolute top-50 end-0 translate-middle-y text-muted me-3"></i>
           </div>
         </div>
       </div>

@@ -41,7 +41,7 @@ export const WishlistCreate = () => {
     }
 
     console.log("Відправка даних на сервер:", formData);
-    // Тут буде ваш fetch до POST /api/wishlists
+    // Тут буде fetch до POST /api/wishlists
     // Після успіху: navigate('/wishlists');
   };
 

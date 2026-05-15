@@ -12,6 +12,7 @@ import { Admin } from './pages/Admin';
 import { Wishlists } from './pages/Wishlists';
 import { Sidebar } from './components/Sidebar';
 import { UserAvatar } from './components/UserAvatar';
+import { WishlistCreate } from './pages/WishlistCreate';
 
 // Компонент-обгортка для захисту маршруту
 const ProtectedAdminRoute = ({ children }) => {
@@ -142,7 +143,7 @@ const AppContent = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/wishlists" element={<Wishlists/>}/>
-            <Route path="/wishlists/create" element={<div className="p-5"><h3>Сторінка створення вішліста (Заглуша). Тут ви можете створити свої Вішлісти</h3></div>} />
+            <Route path="/wishlists/create" element={<WishlistCreate />} />
             <Route path="/booked" element={<div className="p-5">Сторінка Заброньованих</div>} />
             <Route path="/profile" element={<div className="p-5">Сторінка Профілю</div>} />
             <Route path="/admin" element={<ProtectedAdminRoute><Admin /></ProtectedAdminRoute>} />
