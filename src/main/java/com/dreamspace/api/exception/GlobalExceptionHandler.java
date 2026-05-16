@@ -2,7 +2,6 @@ package com.dreamspace.api.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -54,7 +53,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Помилка запиту");
+        response.put("message", "Сталася неочікувана помилка");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); //!!!! код 500
     }
