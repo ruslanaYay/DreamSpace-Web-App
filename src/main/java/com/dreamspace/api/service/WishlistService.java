@@ -6,5 +6,7 @@ import java.util.List;
 
 public interface WishlistService {
     List<WishlistResponseDTO> getUserWishlists(String email);
+
+    void createWishlist(String email, WishlistResponseDTO dto);
 }
 

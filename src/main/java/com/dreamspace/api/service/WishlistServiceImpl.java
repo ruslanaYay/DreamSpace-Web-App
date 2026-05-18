@@ -37,4 +37,12 @@ public class WishlistServiceImpl implements WishlistService{
                         ))
                 .toList();
     }
+
+    @Override
+    public void createWishlist(String email, WishlistResponseDTO dto) {
+        // Тут має бути код створення, але ми робимо "заглушку",
+        // щоб фронтенд отримав успішний статус 201 і не виснув:
+        System.out.println("Бекенд отримав запит на створення вішліста для: " + email);
+        System.out.println("Назва: " + dto.getName());
+    }
 }

@@ -1,0 +1,27 @@
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "mariia.berdnyk1@nure.ua",
+  "password": "01234567"
+}
+
+###
+
+GET http://localhost:8085/api/wishlists
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MDE3MDU4LCJleHAiOjE3NzkxMDM0NTh9.9VoSGFYaO9xSDa5oGBcumZgl4fNRs8mCmREa3tyh5PU
+
+###
+
+GET http://localhost:8085/api/wishlists
+
+###
+
+POST http://localhost:8085/api/wishlists
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MDE3MDU4LCJleHAiOjE3NzkxMDM0NTh9.9VoSGFYaO9xSDa5oGBcumZgl4fNRs8mCmREa3tyh5PU
+Content-Type: application/json
+
+{
+  "name": "Мій крутий вішліст",
+  "description": "Список речей, які я хочу на день народження"
+}
