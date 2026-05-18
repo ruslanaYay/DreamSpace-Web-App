@@ -3,6 +3,8 @@ package com.dreamspace.api.entity;
 import jakarta.persistence.*;
 import com.dreamspace.api.enums.PrivacyStatus;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "wishlist")
@@ -30,7 +32,10 @@ public class Wishlist {
     private boolean showBooked = false;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Wish> wishes = new ArrayList<>();
 
     public Wishlist(User user, String name, String description, PrivacyStatus privacyStatus, Boolean showBooked) {
         this.user = user;
@@ -98,6 +103,13 @@ public class Wishlist {
         this.createdAt = createdAt;
     }
 
+    public List<Wish> getWishes() {
+        return wishes;
+    }
+
+    public void setWishes(List<Wish> wishes) {
+        this.wishes = wishes;
+    }
 
     @Override
     public String toString() {
