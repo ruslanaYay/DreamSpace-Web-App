@@ -1,0 +1,59 @@
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "mariia.berdnyk1@nure.ua",
+  "password": "01234567"
+}
+
+###
+
+GET http://localhost:8085/api/wishlists
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MDE3MDU4LCJleHAiOjE3NzkxMDM0NTh9.9VoSGFYaO9xSDa5oGBcumZgl4fNRs8mCmREa3tyh5PU
+
+###
+
+GET http://localhost:8085/api/wishlists
+
+###
+
+POST http://localhost:8085/api/wishlists
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MDE3MDU4LCJleHAiOjE3NzkxMDM0NTh9.9VoSGFYaO9xSDa5oGBcumZgl4fNRs8mCmREa3tyh5PU
+Content-Type: application/json
+
+{
+  "name": "Мій крутий вішліст",
+  "description": "Список речей, які я хочу на день народження"
+}
+
+### 1. Успішне створення вішліста (Передаємо всі поля)
+POST http://localhost:8085/api/wishlists
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MTA1MjkyLCJleHAiOjE3NzkxOTE2OTJ9.9A3GN9X9-BIxgYbQi91CcaNcKYnrep1P8ORF_QBnXhQ
+
+{
+  "name": "Подарунки на День Народження",
+  "description": "Мій список бажань для друзів та родичів",
+  "privacyStatus": "PUBLIC",
+  "showBooked": true
+}
+
+### 2. Створення зі значеннями за замовчуванням (Без приватності та бронювання)
+POST http://localhost:8085/api/wishlists
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MTA1MjkyLCJleHAiOjE3NzkxOTE2OTJ9.9A3GN9X9-BIxgYbQi91CcaNcKYnrep1P8ORF_QBnXhQ
+
+{
+  "name": "Секретний вішліст",
+  "description": "Тут мають підставитися LINK та false автоматично"
+}
+
+### 3. Перевірка помилки валідації 400 (Порожнє поле name)
+POST http://localhost:8085/api/wishlists
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MTA1MjkyLCJleHAiOjE3NzkxOTE2OTJ9.9A3GN9X9-BIxgYbQi91CcaNcKYnrep1P8ORF_QBnXhQ
+
+{
+  "name": "",
+  "description": "Цей запит повинен повернути помилку 400"
+}

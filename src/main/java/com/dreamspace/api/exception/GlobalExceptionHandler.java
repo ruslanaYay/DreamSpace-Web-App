@@ -55,6 +55,8 @@ public class GlobalExceptionHandler {
         Map<String, String> response = new HashMap<>();
         response.put("message", "Сталася неочікувана помилка");
 
+        ex.printStackTrace();
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); //!!!! код 500
     }
 }

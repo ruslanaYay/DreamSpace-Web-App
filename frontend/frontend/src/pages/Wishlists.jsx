@@ -98,33 +98,34 @@ export const Wishlists = () => {
         </div>
       )}
 
-      <div className="d-flex flex-wrap gap-4">
-        {/* Кнопка створення завжди перша */}
+<div className="d-flex flex-wrap gap-4">
+        {/* Кнопка створення */}
         <Link to="/wishlists/create" className="text-decoration-none">
           <div className="wishlist-card add-card d-flex align-items-center justify-content-center shadow-sm">
             <div className="plus-icon d-flex align-items-center justify-content-center">
-              <i className="bi bi-plus-lg fs-2 text-white"></i>
+              <i className="bi bi-plus-lg text-white" style={{ fontSize: '20px', lineHeight: '20px' }}></i>
             </div>
           </div>
         </Link>
 
         {/* Списки з БД */}
         {!error && filteredWishlists.map((list) => (
-          <div key={list.id} className="wishlist-item">
+          /* Налаштовуємо перехід на сторінку конкретного вішліста */
+          <Link 
+            to={`/wishlists/${list.id}`} 
+            key={list.id} 
+            className="text-decoration-none text-dark wishlist-item"
+          >
             <div className="wishlist-card shadow-sm position-relative mb-2">
-              <div className="status-icon position-absolute top-0 start-0 m-3">
+              
+              {/* Неклікабельна іконка статусу приватності */}
+              <div className="status-icon position-absolute top-0 start-0 m-3" style={{ pointerEvents: 'none' }}>
                 <i className={`bi ${
-                  list.privacyStatus === 'PRIVATE' ? 'bi-eye-slash' : 
-                  list.privacyStatus === 'PUBLIC' ? 'bi-eye' : 
-                  'bi-link-45deg'
+                  list.privacyStatus === 'PRIVATE' ? 'bi-lock-fill' : // Замок для приватного
+                  list.privacyStatus === 'PUBLIC' ? 'bi-eye' :        // Око для публічного
+                  'bi-link-45deg'                                    // Ланцюжок для доступу за посиланням
                 }`}></i>
               </div>
-
-              {/* <div className="menu-icon position-absolute top-0 end-0 m-2">
-                <button className="btn btn-link text-muted p-1 border-0 shadow-none">
-                  <i className="bi bi-three-dots"></i>
-                </button>
-              </div>*/}
               
               <div className="card-image-placeholder d-flex align-items-center justify-content-center overflow-hidden bg-white h-100">
                 {list.coverImageUrl ? (
@@ -136,10 +137,15 @@ export const Wishlists = () => {
             </div>
 
             <div className="card-info ps-1">
-              <h6 className="mb-0 fw-bold text-truncate" style={{ maxWidth: '100%' }}>{list.name}</h6>
-              <small className="text-muted">{list.itemCount} бажань</small>
+              <h6 className="mb-0 fw-bold text-truncate" style={{ maxWidth: '100%' }}>
+                {list.name}
+              </h6>
+              {/* Дефолтний лічильник, якщо itemCount не прийшов з сервера */}
+              <small className="text-muted">
+                {list.itemCount || 0} бажань
+              </small>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
