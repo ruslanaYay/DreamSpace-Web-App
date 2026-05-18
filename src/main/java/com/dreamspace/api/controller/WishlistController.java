@@ -1,8 +1,9 @@
 package com.dreamspace.api.controller;
 
-import com.dreamspace.api.dto.WishlistResponseDTO;
+import com.dreamspace.api.dto.WishlistRequestDTO; // Додали новий імпорт
 import com.dreamspace.api.dto.WishlistResponseDTO;
 import com.dreamspace.api.service.WishlistService;
+import jakarta.validation.Valid; // Додали для активації валідації (@NotBlank)
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,10 +33,14 @@ public class WishlistController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createWishlist(@RequestBody WishlistResponseDTO requestDTO) {
+    public ResponseEntity<WishlistResponseDTO> createWishlist(@Valid @RequestBody WishlistRequestDTO requestDTO) {
+        // Отримуємо email поточного авторизованого користувача з токена
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        wishlistService.createWishlist(email, requestDTO);
 
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        // Викликаємо сервіс, який створить запис у БД і поверне нам результат
+        WishlistResponseDTO responseDTO = wishlistService.createWishlist(email, requestDTO);
+
+        // Повертаємо статус 201 Created разом із заповненим JSON об'єкта
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 }
