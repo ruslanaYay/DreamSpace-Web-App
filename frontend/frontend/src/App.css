@@ -323,3 +323,61 @@ body {
     padding: 1rem 2rem;
     background: white;
 }
+
+/* Плавна зміна прозорості та тіні при наведенні */
+.add-card:hover {
+    opacity: 0.8;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-2px);
+}
+
+/* Стиль для кнопки-стрілки */
+.btn-link:hover i {
+    color: #8A60C2;
+}
+
+/* Контейнер картки бажання (Item Card) */
+.item-card-container {
+    width: 261px;           /* Ширина за макетом */
+    height: 347px;          /* Висота за макетом */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Сіра область для фото або плюсика */
+.item-image-area {
+    width: 229px;           /* Ширина внутрішнього блоку */
+    height: 247px;          /* Висота внутрішнього блоку */
+    background-color: #E6E6E6; /* Колір фону за макетом */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px auto;      /* Центрування всередині контейнера */
+}
+
+/* Фіолетове коло для плюса */
+.item-plus-circle {
+    width: 76px;            /* Розмір кола */
+    height: 76px;           /* Розмір кола */
+    background-color: #8A60C2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.item-plus-circle:hover {
+    transform: scale(1.1);
+}
+
+/* Сам плюсик */
+.item-plus-circle i {
+    font-size: 20px;        /* Розмір іконки */
+    width: 20px;            /* Розмір іконки */
+    height: 20px;           /* Розмір іконки */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
