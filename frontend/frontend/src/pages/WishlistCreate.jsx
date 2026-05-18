@@ -31,18 +31,40 @@ export const WishlistCreate = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Валідація обов'язкового поля
     if (!formData.name.trim()) {
       setErrors({ name: true });
       return;
     }
 
-    console.log("Відправка даних на сервер:", formData);
-    // Тут буде fetch до POST /api/wishlists
-    // Після успіху: navigate('/wishlists');
+    const token = localStorage.getItem('token');
+
+    try {
+      const response = await fetch('http://localhost:8085/api/wishlists', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.status === 201) {
+        // Успішно створено — перенаправляємо на список
+        navigate('/wishlists');
+      } else if (response.status === 401) {
+        alert("Сесія вичерпана, увійдіть знову");
+        navigate('/login');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Помилка при створенні вішліста");
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      alert("Не вдалося з'єднатися з сервером");
+    }
   };
 
   return (
@@ -126,7 +148,7 @@ export const WishlistCreate = () => {
             <button 
               type="submit" 
               className="btn w-100 py-2 text-white fw-bold"
-              style={{ backgroundColor: '#8a70ff', borderRadius: '8px' }}
+              style={{ backgroundColor: '#8A60C2', borderRadius: '8px' }}
             >
               Створити
             </button>

@@ -240,20 +240,24 @@ body {
 }
 
 .search-input:focus {
-  border-color: #6f42c1;
+  border-color: #8A60C2;
   box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.1);
   outline: none;
 }
 
 /* Базова картка */
+/* Основний контейнер картки */
 .wishlist-card {
-  width: 180px;
-  height: 180px;
-  background-color: #f1f1f1;
-  border-radius: 15px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  overflow: hidden;
+    width: 240px;           /* Точна ширина з Figma */
+    height: 250px;          /* Точна висота з Figma */
+    background-color: #EEE DEF; /* Колір фону Fill з макета */
+    border-radius: 12px;    /* Corner radius з макета */
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .wishlist-card:hover {
