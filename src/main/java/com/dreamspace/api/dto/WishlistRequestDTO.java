@@ -13,11 +13,11 @@ public class WishlistRequestDTO {
 
     private Boolean showBooked;
 
-    // 1. Порожній конструктор
+
     public WishlistRequestDTO() {
     }
 
-    // 2. Повний конструктор
+
     public WishlistRequestDTO(String name, String description, String privacyStatus, Boolean showBooked) {
         this.name = name;
         this.description = description;
@@ -25,7 +25,7 @@ public class WishlistRequestDTO {
         this.showBooked = showBooked;
     }
 
-    // 3. Гетери та Сетери
+
     public String getName() {
         return name;
     }

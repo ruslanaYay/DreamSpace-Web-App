@@ -25,7 +25,7 @@ public class WishlistController {
 
     @GetMapping
     public ResponseEntity<List<WishlistResponseDTO>> getWishlists() {
-        // Отримання пошти поточного користувача
+
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         List<WishlistResponseDTO> myWishlists = wishlistService.getUserWishlists(email);
 
@@ -34,13 +34,13 @@ public class WishlistController {
 
     @PostMapping
     public ResponseEntity<WishlistResponseDTO> createWishlist(@Valid @RequestBody WishlistRequestDTO requestDTO) {
-        // Отримуємо email поточного авторизованого користувача з токена
+
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Викликаємо сервіс, який створить запис у БД і поверне нам результат
+
         WishlistResponseDTO responseDTO = wishlistService.createWishlist(email, requestDTO);
 
-        // Повертаємо статус 201 Created разом із заповненим JSON об'єкта
+
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 }

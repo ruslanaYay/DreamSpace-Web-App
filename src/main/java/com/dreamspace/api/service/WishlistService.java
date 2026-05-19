@@ -9,6 +9,6 @@ public interface WishlistService {
 
     List<WishlistResponseDTO> getUserWishlists(String email);
 
-    // Змінюємо void на WishlistResponseDTO, а тип dto — на WishlistRequestDTO
+
     WishlistResponseDTO createWishlist(String email, WishlistRequestDTO dto);
 }
