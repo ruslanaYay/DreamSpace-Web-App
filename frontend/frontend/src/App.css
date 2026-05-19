@@ -1,0 +1,424 @@
+/* Підключення шрифтів */
+@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Raleway:wght@400;700&display=swap');
+
+:root {
+  --ds-purple: #8A60C2;
+  --header-height: 82px; /* Фіксуємо висоту хедера для розрахунків */
+}
+
+body {
+  font-family: 'Raleway', sans-serif;
+  margin: 0;
+  overflow-x: hidden;
+  background-color: #fcfcfc;
+}
+
+/* Структура компонування */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header-zone {
+  height: var(--header-height);
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.main-layout {
+  display: flex;
+  flex: 1; /* Заповнює простір, що залишився */
+}
+
+/* Логотип */
+.logo-text {
+  font-family: 'Dela Gothic One', cursive;
+  color: var(--ds-purple);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* Sidebar (Бічна панель) */
+.sidebar-zone {
+  width: 250px;
+  min-width: 250px;
+  background: white;
+  border-right: 1px solid #f0f0f0;
+  z-index: 10;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #555;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 10px;
+  transition: 0.2s;
+  background: transparent;
+}
+
+.nav-link i { font-size: 1.4rem; }
+.nav-link:hover { color: var(--ds-purple); background: #f8f7ff; }
+.nav-link.active {
+  background-color: var(--ds-purple) !important;
+  color: white !important;
+}
+
+/* Область контенту */
+.content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Головна сторінка (Home) */
+.content-area {
+  padding: 3rem;
+  position: relative;
+  flex: 1;
+}
+
+.text-content {
+  position: relative;
+  z-index: 5;
+  max-width: 850px;
+  margin-left: 50px;
+}
+
+.main-title {
+  font-family: 'Dela Gothic One', cursive;
+  color: var(--ds-purple);
+  font-size: 2.2rem;
+  line-height: 1.3;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+}
+
+.feature-list li {
+  font-size: 1.4rem;
+  margin-bottom: 2rem;
+  padding-left: 30px;
+  position: relative;
+}
+
+.feature-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+/* Декорації головної сторінки */
+.left-decor {
+  position: absolute;
+  left: -100px;
+  bottom: 0;
+  width: 500px;
+  height: 600px;
+  z-index: 1;
+}
+
+.img-blam { position: absolute; bottom: 0; left: 0; width: 100%; }
+.img-present-1 {
+  position: absolute;
+  bottom: 260px;
+  left: 110px;
+  width: 180px;
+  transform: rotate(-5deg);
+}
+.img-present-2 {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 350px;
+  z-index: 2;
+}
+
+/* СТОРІНКА РЕЄСТРАЦІЇ (як на макеті) */
+.register-page-wrapper {
+  background-color: #f4f7ff; /* Світлий фон як на скриншоті */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* Займає весь простір, коли бічної панелі немає */
+  height: 100%;
+  flex: 1;
+}
+
+.register-card {
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #e0e6ed;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.register-form-title {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 700;
+  color: #444;
+  margin-bottom: 1.5rem;
+}
+
+.custom-input {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background-color: white;
+}
+
+.btn-purple {
+  background-color: #8A60C2; /* Колір кнопки з макету */
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.btn-purple:hover { background-color: #7A51B1; }
+
+.btn-light-gray {
+  background-color: #e9ecef;
+  border: none;
+  color: #6c757d;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+/* Адаптивність */
+@media (max-width: 1100px) {
+  .left-decor { opacity: 0.4; }
+  .img-present-2 { width: 250px; }
+}
+
+/* Червоний контур для помилкового поля */
+.is-invalid-field {
+  border: 1px solid #dc3545 !important;
+}
+
+/* Текст помилки під полем */
+.error-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Стиль для кнопки переходу (сірий) */
+.btn-light-gray {
+  background-color: #e9ecef;
+  border: none;
+  color: #6c757d;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.btn-light-gray:hover {
+  background-color: #dee2e6;
+}
+
+/* Пошуковий інпут */
+.search-input {
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  border-color: #8A60C2;
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.1);
+  outline: none;
+}
+
+/* Базова картка */
+/* Основний контейнер картки */
+/* Базова картка */
+.wishlist-card {
+    width: 240px;           /* Точна ширина з Figma */
+    height: 250px;          /* Точна висота з Figma */
+    background-color: #EEEDEF; /* ВИПРАВЛЕНО: прибрано пробіл */
+    border-radius: 12px;
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Плавніший перехід */
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Ефект збільшення та підйому */
+.wishlist-card:hover {
+    transform: translateY(-8px) scale(1.02); /* Піднімається вгору і трохи збільшується */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Картка додавання (+) */
+.add-card {
+    background-color: #EBEBEB; /* Колір фону для порожньої картки */
+}
+
+.plus-icon {
+    width: 64px;
+    height: 64px;
+    background-color: #8A60C2; 
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.wishlist-card:hover .plus-icon {
+    background-color: #7a52c1; /* Трохи темніша при наведенні */
+}
+
+/* Контейнер для зображення всередині картки */
+.card-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Контейнер для всього елемента (картка + текст під нею) */
+.wishlist-item-wrapper {
+    width: 240px; /* Має збігатися з шириною картки */
+    text-decoration: none !important;
+    color: inherit;
+}
+
+.card-info h6 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 12px;
+    margin-bottom: 2px;
+    color: #333;
+}
+
+.card-info small {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Картка з контентом */
+.card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa;
+  border: 1px solid #eee;
+}
+
+.status-icon {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.wishlist-item {
+  width: 180px;
+}
+
+.card-info h6 {
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+.card-info small {
+  font-size: 0.8rem;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    background-color: #2c2c2c; /* Темний фон, як на вашому макеті */
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.avatar-placeholder:hover {
+    opacity: 0.8;
+}
+
+/* Додатково для Header */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: white;
+}
+
+/* Плавна зміна прозорості та тіні при наведенні */
+.add-card:hover {
+    opacity: 0.8;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-2px);
+}
+
+/* Стиль для кнопки-стрілки */
+.btn-link:hover i {
+    color: #8A60C2;
+}
+
+/* Контейнер картки бажання (Item Card) */
+.item-card-container {
+    width: 261px;           /* Ширина за макетом */
+    height: 347px;          /* Висота за макетом */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Сіра область для фото або плюсика */
+.item-image-area {
+    width: 229px;           /* Ширина внутрішнього блоку */
+    height: 247px;          /* Висота внутрішнього блоку */
+    background-color: #E6E6E6; /* Колір фону за макетом */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px auto;      /* Центрування всередині контейнера */
+}
+
+/* Фіолетове коло для плюса */
+.item-plus-circle {
+    width: 76px;            /* Розмір кола */
+    height: 76px;           /* Розмір кола */
+    background-color: #8A60C2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.item-plus-circle:hover {
+    transform: scale(1.1);
+}
+
+/* Сам плюсик */
+.item-plus-circle i {
+    font-size: 20px;        /* Розмір іконки */
+    width: 20px;            /* Розмір іконки */
+    height: 20px;           /* Розмір іконки */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
