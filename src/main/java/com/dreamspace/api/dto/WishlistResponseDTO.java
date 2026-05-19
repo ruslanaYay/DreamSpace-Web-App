@@ -1,7 +1,11 @@
 package com.dreamspace.api.dto;
 
 import com.dreamspace.api.enums.PrivacyStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WishlistResponseDTO {
     private Long id;
@@ -10,14 +14,12 @@ public class WishlistResponseDTO {
     private int itemCount;
     private String coverImageUrl;
     private PrivacyStatus privacyStatus;
-    private boolean showBooked; // Додано
-    private LocalDateTime createdAt; // Додано
+    private boolean showBooked;
+    private LocalDateTime createdAt;
 
-    // 1. Порожній конструктор (обов'язковий для Spring/Jackson)
     public WishlistResponseDTO() {
     }
 
-    // 2. Повний конструктор (якщо знадобиться)
     public WishlistResponseDTO(Long id, String name, String description, int itemCount,
                                String coverImageUrl, PrivacyStatus privacyStatus,
                                boolean showBooked, LocalDateTime createdAt) {
@@ -31,23 +33,25 @@ public class WishlistResponseDTO {
         this.createdAt = createdAt;
     }
 
-    // 3. Гетери
+    //Гетери
     public Long getId() { return id; }
     public String getName() { return name; }
-    public String getDescription() { return description; } // Додано
+    public String getDescription() { return description; }
     public int getItemCount() { return itemCount; }
     public String getCoverImageUrl() { return coverImageUrl; }
     public PrivacyStatus getPrivacyStatus() { return privacyStatus; }
-    public boolean isShowBooked() { return showBooked; } // Додано
-    public LocalDateTime getCreatedAt() { return createdAt; } // Додано
+    public boolean isShowBooked() { return showBooked; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
-    // 4. Сетери (щоб ми могли заповнювати DTO в сервісі)
+
+    // Сетери
     public void setId(Long id) { this.id = id; }
     public void setName(String name) { this.name = name; }
-    public void setDescription(String description) { this.description = description; } // Додано
+    public void setDescription(String description) { this.description = description; }
     public void setItemCount(int itemCount) { this.itemCount = itemCount; }
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
     public void setPrivacyStatus(PrivacyStatus privacyStatus) { this.privacyStatus = privacyStatus; }
-    public void setShowBooked(boolean showBooked) { this.showBooked = showBooked; } // Додано
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; } // Додано
+    public void setShowBooked(boolean showBooked) { this.showBooked = showBooked; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
 }
