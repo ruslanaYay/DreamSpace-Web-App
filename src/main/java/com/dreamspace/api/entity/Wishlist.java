@@ -31,7 +31,7 @@ public class Wishlist {
     @Column(name = "show_booked", nullable = false)
     private boolean showBooked = false;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at",  nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL, orphanRemoval = true)
