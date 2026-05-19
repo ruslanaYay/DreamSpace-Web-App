@@ -1,5 +1,6 @@
 package com.dreamspace.api.controller;
 
+import com.dreamspace.api.dto.WishlistDetailsDTO;
 import com.dreamspace.api.dto.WishlistRequestDTO; // Додали новий імпорт
 import com.dreamspace.api.dto.WishlistResponseDTO;
 import com.dreamspace.api.service.WishlistService;
@@ -8,11 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -34,13 +31,20 @@ public class WishlistController {
 
     @PostMapping
     public ResponseEntity<WishlistResponseDTO> createWishlist(@Valid @RequestBody WishlistRequestDTO requestDTO) {
-        // Отримуємо email поточного авторизованого користувача з токена
+        // Отримання email поточного авторизованого користувача з токена
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        // Викликаємо сервіс, який створить запис у БД і поверне нам результат
+        // Виклик сервісу, який створить запис у БД і поверне результат
         WishlistResponseDTO responseDTO = wishlistService.createWishlist(email, requestDTO);
-
-        // Повертаємо статус 201 Created разом із заповненим JSON об'єкта
+        // Повернення статусу 201 Created разом із заповненим JSON об'єкта
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+    }
+    // для отримання інформації про вішліст
+    @GetMapping("/{id}")
+    public ResponseEntity<WishlistDetailsDTO> getWishlistById(@PathVariable Long id) {
+        // Отримання пошти поточного користувача
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        WishlistDetailsDTO WishlistDetails = wishlistService.getWishlistDetails(id, email);
+        // 200 OK
+        return new ResponseEntity<>(WishlistDetails, HttpStatus.OK);
     }
 }

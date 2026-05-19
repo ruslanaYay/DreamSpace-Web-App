@@ -1,11 +1,14 @@
 package com.dreamspace.api.service;
 
+import com.dreamspace.api.dto.WishlistDetailsDTO;
 import com.dreamspace.api.dto.WishlistRequestDTO; // Додали новий імпорт
 import com.dreamspace.api.dto.WishlistResponseDTO;
 import com.dreamspace.api.entity.User;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.PrivacyStatus; // Додали для роботи з енумом приватності
+import com.dreamspace.api.exception.AccessDeniedException;
 import com.dreamspace.api.exception.UserNotFoundException;
+import com.dreamspace.api.exception.WishlistNotFoundException;
 import com.dreamspace.api.repository.UserRepository;
 import com.dreamspace.api.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Для безпечного запису в БД
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,7 +37,6 @@ public class WishlistServiceImpl implements WishlistService {
         // Пошук вішлістів користувача
         List<Wishlist> wishlists = wishlistRepository.findAllByUser(user);
 
-        // Формування DTO (оновили під новий конструктор, який ми створили раніше)
         return wishlists.stream()
                 .map(wishlist -> new WishlistResponseDTO(
                         wishlist.getId(),
@@ -49,38 +52,57 @@ public class WishlistServiceImpl implements WishlistService {
     }
 
     @Override
+    public WishlistDetailsDTO getWishlistDetails(Long id, String email){
+        Wishlist wishlist = wishlistRepository.findById(id)
+                .orElseThrow(() -> new WishlistNotFoundException());
+        boolean isOwner = wishlist.getUser().getEmail().equals(email); // що це значить?
+        if (!isOwner && wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE) {
+            throw new AccessDeniedException();
+        }
+        return new WishlistDetailsDTO(
+                wishlist.getId(),
+                wishlist.getName(),
+                wishlist.getDescription(),
+                wishlist.getPrivacyStatus(),
+                wishlist.getShowBooked()
+        );
+
+    }
+
+
+    @Override
     @Transactional // Гарантує, що транзакція в БД виконається коректно
     public WishlistResponseDTO createWishlist(String email, WishlistRequestDTO dto) {
-        // 1. Автоматично шукаємо юзера за email з токена для прив'язки
+        // пошук користувача за email з токена для прив'язки
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException());
 
-        // 2. Створюємо нову сутність Wishlist для збереження в БД
+        // створення нової сутності Wishlist для збереження в БД
         Wishlist wishlist = new Wishlist();
         wishlist.setName(dto.getName());
         wishlist.setDescription(dto.getDescription());
-        wishlist.setUser(user); // Фізична прив'язка до поточного користувача!
+        wishlist.setUser(user); // Фізична прив'язка до поточного користувача
         wishlist.setCreatedAt(LocalDateTime.now()); // Час створення вішліста
 
-        // 3. Перевірка параметрів приватності (значення за замовчуванням — LINK)
+        // Перевірка параметрів приватності (значення за замовчуванням — LINK)
         if (dto.getPrivacyStatus() == null || dto.getPrivacyStatus().isEmpty()) {
             wishlist.setPrivacyStatus(PrivacyStatus.LINK);
         } else {
-            // Перетворюємо String від фронтенду у ваш Enum безпечно
+            // Перетворення String у Enum безпечно
             wishlist.setPrivacyStatus(PrivacyStatus.valueOf(dto.getPrivacyStatus().toUpperCase()));
         }
 
-        // 4. Перевірка бронювання (значення за замовчуванням — false)
+        // Перевірка бронювання (значення за замовчуванням — false)
         if (dto.getShowBooked() == null) {
             wishlist.setShowBooked(false);
         } else {
             wishlist.setShowBooked(dto.getShowBooked());
         }
 
-        // 5. Фізично записуємо дані у базу даних
+        //Запис даних у базу даних
         Wishlist savedWishlist = wishlistRepository.save(wishlist);
 
-        // 6. Формуємо успішну відповідь (WishlistResponseDTO) для фронтенду
+        //Формування успішної відповіді (WishlistResponseDTO) для фронтенду
         WishlistResponseDTO responseDTO = new WishlistResponseDTO();
         responseDTO.setId(savedWishlist.getId());
         responseDTO.setName(savedWishlist.getName());
