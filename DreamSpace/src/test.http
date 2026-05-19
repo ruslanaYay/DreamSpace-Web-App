@@ -57,3 +57,26 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZ
   "name": "",
   "description": "Цей запит повинен повернути помилку 400"
 }
+
+###
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "diana.iuzyfovych@nure.ua",
+  "password": "AdminDiana"
+}
+
+###
+GET http://localhost:8085/api/admin/test
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWFuYS5pdXp5Zm92eWNoQG51cmUudWEiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3NzkxODk4ODEsImV4cCI6MTc3OTI3NjI4MX0.qeCqP4-dA4KHC869MEiSuN_hlPKMfF2odmRkNPW-TlU
+
+###
+
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": ""
+}
