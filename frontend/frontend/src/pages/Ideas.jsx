@@ -1,0 +1,1 @@
+export const Ideas = () => <div className="p-5"><h1>Сторінка Ідей</h1></div>;
