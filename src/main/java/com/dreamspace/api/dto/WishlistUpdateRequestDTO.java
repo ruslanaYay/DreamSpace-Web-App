@@ -2,23 +2,14 @@ package com.dreamspace.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class WishlistRequestDTO {
+public class WishlistUpdateRequestDTO {
 
     @NotBlank(message = "Це поле обов’язкове")
     private String name;
+
     private String description;
     private String privacyStatus;
     private Boolean showBooked;
-
-    public WishlistRequestDTO() {
-    }
-
-    public WishlistRequestDTO(String name, String description, String privacyStatus, Boolean showBooked) {
-        this.name = name;
-        this.description = description;
-        this.privacyStatus = privacyStatus;
-        this.showBooked = showBooked;
-    }
 
 
     public String getName() {
@@ -28,6 +19,7 @@ public class WishlistRequestDTO {
     public void setName(String name) {
         this.name = name;
     }
+
 
     public String getDescription() {
         return description;

@@ -2,14 +2,14 @@ POST http://localhost:8085/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "mariia.berdnyk1@nure.ua",
-  "password": "01234567"
+  "email": "diana.iuzyfovych@nure.ua",
+  "password": "AdminDiana"
 }
 
 ###
 
 GET http://localhost:8085/api/wishlists
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5MDE3MDU4LCJleHAiOjE3NzkxMDM0NTh9.9VoSGFYaO9xSDa5oGBcumZgl4fNRs8mCmREa3tyh5PU
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5Mjg5OTk0LCJleHAiOjE3NzkzNzYzOTR9.3KthNUTtsj5C5LgNTkKI1HuuxAjQ2Nb9iG1UrMS_T1E
 
 ###
 
@@ -56,4 +56,109 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZ
 {
   "name": "",
   "description": "Цей запит повинен повернути помилку 400"
+}
+
+###
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "diana.iuzyfovych@nure.ua",
+  "password": "AdminDiana"
+}
+
+###
+GET http://localhost:8085/api/admin/test
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWFuYS5pdXp5Zm92eWNoQG51cmUudWEiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3NzkxODk4ODEsImV4cCI6MTc3OTI3NjI4MX0.qeCqP4-dA4KHC869MEiSuN_hlPKMfF2odmRkNPW-TlU
+
+###
+
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": ""
+}
+
+###
+POST http://localhost:8085/api/wishlists
+Content-Type: application/json
+Authorization
+
+{
+  "name": "",
+  "description": "Без назви"
+}
+
+### 1. Тест на 200 OK (Успішне оновлення)
+PUT http://localhost:8085/api/wishlists/4
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5Mjg5OTk0LCJleHAiOjE3NzkzNzYzOTR9.3KthNUTtsj5C5LgNTkKI1HuuxAjQ2Nb9iG1UrMS_T1E
+
+{
+  "name": "Нова назва",
+  "description": "Новий опис",
+  "privacyStatus": "PRIVATE",
+  "showBooked": true
+}
+### 2. Тест на 400 Bad Request (Помилка валідації)
+
+PUT http://localhost:8085/api/wishlists/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5Mjg5OTk0LCJleHAiOjE3NzkzNzYzOTR9.3KthNUTtsj5C5LgNTkKI1HuuxAjQ2Nb9iG1UrMS_T1E
+
+{
+  "name": "",
+  "description": "Опис",
+  "privacyStatus": "LINK",
+  "showBooked": false
+}
+### 3. Тест на 401 Unauthorized (Помилка авторизації)
+
+PUT http://localhost:8085/api/wishlists/1
+Content-Type: application/json
+
+{
+  "name": "Нова назва",
+  "description": "Новий опис",
+  "privacyStatus": "PUBLIC",
+  "showBooked": false
+}
+### 4. Тест на 404 Not Found (Вішліст не знайдено)
+
+PUT http://localhost:8085/api/wishlists/999999
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5Mjg5OTk0LCJleHAiOjE3NzkzNzYzOTR9.3KthNUTtsj5C5LgNTkKI1HuuxAjQ2Nb9iG1UrMS_T1E
+
+{
+  "name": "Нова назва",
+  "description": "Новий опис",
+  "privacyStatus": "PUBLIC",
+  "showBooked": false
+}
+### 5. Тест на 500 Internal Server Error (Серверна помилка)
+
+PUT http://localhost:8085/api/wishlists/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc5Mjg5OTk0LCJleHAiOjE3NzkzNzYzOTR9.3KthNUTtsj5C5LgNTkKI1HuuxAjQ2Nb9iG1UrMS_T1E
+
+{
+  "name": "Нова назва",
+  "description": "Новий опис",
+  "privacyStatus": "КРИВИЙ_СТАТУС_ДЛЯ_ТЕСТУ_500",
+  "showBooked": false
+}
+### 6. Тест на 403 Forbidden (Доступ заборонено)
+# Крок А: Спочатку залоґінься під ІНШИМ юзером (зміни email/пароль у запиті №0 і запусти його знову).
+# Крок Б: Запусти цей запит. Токен буде нового юзера, а ID вішліста (1) — старого юзера.
+PUT http://localhost:8085/api/wishlists/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWFuYS5pdXp5Zm92eWNoQG51cmUudWEiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3NzkyOTE2MDgsImV4cCI6MTc3OTM3ODAwOH0.ad8SXJgepF0clr-nnxdnXoIXPw8F7CTkLq0N0xdYy6Y
+
+{
+  "name": "Спроба зламати чуже",
+  "description": "Я інший юзер і лізу сюди",
+  "privacyStatus": "LINK",
+  "showBooked": false
 }

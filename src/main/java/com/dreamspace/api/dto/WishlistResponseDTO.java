@@ -1,36 +1,55 @@
 package com.dreamspace.api.dto;
 
-import com.dreamspace.api.enums.PrivacyStatus;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
+import com.dreamspace.api.enums.PrivacyStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 public class WishlistResponseDTO {
+
     private Long id;
+
     private String name;
-    private String description; // Додано
+
+    private String description;
+
     private int itemCount;
+
     private String coverImageUrl;
+
     private PrivacyStatus privacyStatus;
     private boolean showBooked;
     private LocalDateTime createdAt;
 
     public WishlistResponseDTO() {
+
     }
 
     public WishlistResponseDTO(Long id, String name, String description, int itemCount,
+
                                String coverImageUrl, PrivacyStatus privacyStatus,
+
                                boolean showBooked, LocalDateTime createdAt) {
+
         this.id = id;
+
         this.name = name;
+
         this.description = description;
+
         this.itemCount = itemCount;
+
         this.coverImageUrl = coverImageUrl;
+
         this.privacyStatus = privacyStatus;
+
         this.showBooked = showBooked;
+
         this.createdAt = createdAt;
+
     }
 
     //Гетери
@@ -42,7 +61,6 @@ public class WishlistResponseDTO {
     public PrivacyStatus getPrivacyStatus() { return privacyStatus; }
     public boolean isShowBooked() { return showBooked; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-
 
     // Сетери
     public void setId(Long id) { this.id = id; }
