@@ -21,7 +21,7 @@ public class JwtService {
     private Key key;
     @PostConstruct
     protected void init() {
-        // Перетворення рядка secret у об'єкт Key
+
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
     public String generateToken(String email, String role) {
@@ -42,15 +42,15 @@ public class JwtService {
                 .getBody();
     }
 
-    //Отримання пошти з токену
+
     public String extractEmail(String token) {
         return extractClaims(token).getSubject();
     }
-    //Отримання ролі з токену
+
     public String extractRole(String token) {
         return extractClaims(token).get("role", String.class);
     }
-    //Перевірка валідності
+
     public boolean isTokenValid(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);

@@ -5,3 +5,4 @@ public class WishlistNotFoundException extends RuntimeException {
       super("Вказаний вішліст не знайдено");
     }
 }
+

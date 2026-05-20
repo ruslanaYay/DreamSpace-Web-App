@@ -1,8 +1,10 @@
 package com.dreamspace.api.service;
 
+
 import com.dreamspace.api.dto.WishlistDetailsDTO;
 import com.dreamspace.api.dto.WishlistRequestDTO; // Додали новий імпорт
 import com.dreamspace.api.dto.WishlistResponseDTO;
+import com.dreamspace.api.dto.WishlistUpdateRequestDTO; // Додали новий імпорт
 import com.dreamspace.api.entity.User;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.PrivacyStatus; // Додали для роботи з енумом приватності
@@ -13,7 +15,7 @@ import com.dreamspace.api.repository.UserRepository;
 import com.dreamspace.api.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Для безпечного запису в БД
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,11 +32,10 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     public List<WishlistResponseDTO> getUserWishlists(String email) {
-        // Пошук користувача за поштою
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException());
 
-        // Пошук вішлістів користувача
         List<Wishlist> wishlists = wishlistRepository.findAllByUser(user);
 
         return wishlists.stream()
@@ -42,7 +43,7 @@ public class WishlistServiceImpl implements WishlistService {
                         wishlist.getId(),
                         wishlist.getName(),
                         wishlist.getDescription(),
-                        0, // itemCount тимчасово 0, поки немає бажань
+                        0,
                         null, // coverImageUrl тимчасово null
                         wishlist.getPrivacyStatus(),
                         wishlist.getShowBooked() != null ? wishlist.getShowBooked() : false,
@@ -91,7 +92,6 @@ public class WishlistServiceImpl implements WishlistService {
             // Перетворення String у Enum безпечно
             wishlist.setPrivacyStatus(PrivacyStatus.valueOf(dto.getPrivacyStatus().toUpperCase()));
         }
-
         // Перевірка бронювання (значення за замовчуванням — false)
         if (dto.getShowBooked() == null) {
             wishlist.setShowBooked(false);
@@ -110,7 +110,45 @@ public class WishlistServiceImpl implements WishlistService {
         responseDTO.setPrivacyStatus(savedWishlist.getPrivacyStatus());
         responseDTO.setShowBooked(savedWishlist.getShowBooked());
         responseDTO.setCreatedAt(savedWishlist.getCreatedAt());
-        responseDTO.setItemCount(0); // Новий вішліст завжди порожній
+        responseDTO.setItemCount(0);
+        responseDTO.setCoverImageUrl(null);
+
+        return responseDTO;
+    }
+
+
+    @Override
+    @Transactional
+    public WishlistResponseDTO updateWishlist(Long id, WishlistUpdateRequestDTO dto, String currentUserEmail) {
+
+        Wishlist wishlist = wishlistRepository.findById(id)
+                .orElseThrow(() -> new WishlistNotFoundException());
+
+        if (!wishlist.getUser().getEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException();
+        }
+
+        wishlist.setName(dto.getName());
+        wishlist.setDescription(dto.getDescription());
+
+        if (dto.getPrivacyStatus() != null && !dto.getPrivacyStatus().isEmpty()) {
+            wishlist.setPrivacyStatus(PrivacyStatus.valueOf(dto.getPrivacyStatus().toUpperCase()));
+        }
+
+        if (dto.getShowBooked() != null) {
+            wishlist.setShowBooked(dto.getShowBooked());
+        }
+
+        Wishlist updatedWishlist = wishlistRepository.save(wishlist);
+
+        WishlistResponseDTO responseDTO = new WishlistResponseDTO();
+        responseDTO.setId(updatedWishlist.getId());
+        responseDTO.setName(updatedWishlist.getName());
+        responseDTO.setDescription(updatedWishlist.getDescription());
+        responseDTO.setPrivacyStatus(updatedWishlist.getPrivacyStatus());
+        responseDTO.setShowBooked(updatedWishlist.getShowBooked());
+        responseDTO.setCreatedAt(updatedWishlist.getCreatedAt());
+        responseDTO.setItemCount(0);
         responseDTO.setCoverImageUrl(null);
 
         return responseDTO;
