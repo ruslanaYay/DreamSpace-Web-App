@@ -5,27 +5,26 @@ import com.dreamspace.api.enums.Priority;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-public class WishResponseDTO {
-    private Long id;
+public class WishRequestDTO {
     private Long wishlistId;
+    @NotBlank(message = "Це поле обов'язкове")
     private String name;
     private String storeLink;
+    @DecimalMin(value = "0.0", message = "Значення повинне бути більше або рівне 0")
     private BigDecimal price;
     private String description;
     private String imageUrl;
-    private Priority priority;
-    private LocalDateTime createdAt;
+    private String priority;
 
-    public WishResponseDTO() {
+    public WishRequestDTO() {
     }
 
-    public WishResponseDTO(Long id, Long wishlistId, String name, String storeLink,
-                           BigDecimal price, String description, String imageUrl, Priority priority, LocalDateTime createdAt) {
-        this.id = id;
+    public WishRequestDTO(Long wishlistId, String name, String storeLink,
+                          BigDecimal price, String description, String imageUrl, String priority) {
         this.wishlistId = wishlistId;
         this.name = name;
         this.storeLink = storeLink;
@@ -33,15 +32,6 @@ public class WishResponseDTO {
         this.description = description;
         this.imageUrl = imageUrl;
         this.priority = priority;
-        this.createdAt = createdAt;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Long getWishlistId() {
@@ -92,19 +82,11 @@ public class WishResponseDTO {
         this.imageUrl = imageUrl;
     }
 
-    public Priority getPriority() {
+    public String getPriority() {
         return priority;
     }
 
-    public void setPriority(Priority priority) {
+    public void setPriority(String priority) {
         this.priority = priority;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }
