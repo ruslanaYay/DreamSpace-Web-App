@@ -59,4 +59,19 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); //!!!! код 500
     }
+    @ExceptionHandler(WishlistNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleWishlistNotFound(WishlistNotFoundException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", ex.getMessage());
+        // Повертаємо 404 Not Found
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<Map<String, String>> handleForbiddenAccess(ForbiddenAccessException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", ex.getMessage());
+        // Повертаємо 403 Forbidden
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
 }

@@ -2,6 +2,7 @@ package com.dreamspace.api.service;
 
 import com.dreamspace.api.dto.WishlistRequestDTO; // Додався новий імпорт
 import com.dreamspace.api.dto.WishlistResponseDTO;
+import com.dreamspace.api.dto.WishlistUpdateRequestDTO;
 
 import java.util.List;
 
@@ -11,4 +12,6 @@ public interface WishlistService {
 
 
     WishlistResponseDTO createWishlist(String email, WishlistRequestDTO dto);
+
+    WishlistResponseDTO updateWishlist(Long id, WishlistUpdateRequestDTO dto, String currentUserEmail);
 }
