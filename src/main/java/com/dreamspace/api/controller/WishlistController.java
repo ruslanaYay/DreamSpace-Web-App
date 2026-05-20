@@ -55,4 +55,10 @@ public class WishlistController {
         // 200 OK
         return new ResponseEntity<>(WishlistDetails, HttpStatus.OK);
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<WishlistResponseDTO> updateWishlist(@PathVariable Long id, @Valid @RequestBody WishlistUpdateRequestDTO requestDTO) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        WishlistResponseDTO responseDTO = wishlistService.updateWishlist(id, requestDTO, email);
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
 }
