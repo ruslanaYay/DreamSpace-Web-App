@@ -14,7 +14,7 @@ import { Sidebar } from './components/Sidebar';
 import { UserAvatar } from './components/UserAvatar';
 import { WishlistCreate } from './pages/WishlistCreate';
 import { WishlistDetails } from './components/WishlistDetails';
-import { WishItemCreate } from './pages/WishItemCreate';
+import { WishItemCreate } from './components/WishItemCreate';
 
 // Компонент-обгортка для захисту маршруту
 const ProtectedAdminRoute = ({ children }) => {
