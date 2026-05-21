@@ -14,6 +14,7 @@ import { Sidebar } from './components/Sidebar';
 import { UserAvatar } from './components/UserAvatar';
 import { WishlistCreate } from './pages/WishlistCreate';
 import { WishlistDetails } from './components/WishlistDetails';
+import { WishItemCreate } from './pages/WishItemCreate';
 
 // Компонент-обгортка для захисту маршруту
 const ProtectedAdminRoute = ({ children }) => {
@@ -146,6 +147,7 @@ const AppContent = () => {
             <Route path="/wishlists" element={<Wishlists/>}/>
             <Route path="/wishlists/create" element={<WishlistCreate />} />
             <Route path="/wishlists/:id" element={<WishlistDetails />} />
+            <Route path="/wishlists/:id/add-item" element={<WishItemCreate />} />
             <Route path="/booked" element={<div className="p-5">Сторінка Заброньованих</div>} />
             <Route path="/profile" element={<div className="p-5">Сторінка Профілю</div>} />
             <Route path="/admin" element={<ProtectedAdminRoute><Admin /></ProtectedAdminRoute>} />

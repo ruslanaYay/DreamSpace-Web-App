@@ -479,3 +479,30 @@ body {
 .card-info small {
     font-size: 0.8rem;
 }
+
+/* Червона рамка для помилок */
+.is-invalid-field {
+  border: 1px solid #dc3545 !important;
+}
+
+/* Текст помилки */
+.error-text {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* Ефект для кнопки Додати */
+.btn-purple {
+  background-color: #8A60C2;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-purple:hover {
+  background-color: #724bb7 !important; /* Темніший колір */
+  transform: translateY(-1px);
+}
+
+.btn-purple:active {
+  transform: translateY(0);
+}
