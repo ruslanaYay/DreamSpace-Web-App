@@ -65,7 +65,7 @@ const AppContent = () => {
     photoUrl: localStorage.getItem('userPhoto')
   };
 
-  const isAuthPage = ['/register', '/login', '/resetpassword'].includes(location.pathname);
+  const isAuthPage = ['/register', '/login', '/resetpassword', '/wishlists/create'].includes(location.pathname);
 
   return (
     <div className="app-container min-vh-100 d-flex flex-column">
