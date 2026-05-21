@@ -16,6 +16,7 @@ import com.dreamspace.api.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.dreamspace.api.repository.WishRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,6 +31,9 @@ public class WishlistServiceImpl implements WishlistService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private WishRepository wishRepository;
+
     @Override
     public List<WishlistResponseDTO> getUserWishlists(String email) {
 
@@ -39,16 +43,24 @@ public class WishlistServiceImpl implements WishlistService {
         List<Wishlist> wishlists = wishlistRepository.findAllByUser(user);
 
         return wishlists.stream()
-                .map(wishlist -> new WishlistResponseDTO(
-                        wishlist.getId(),
-                        wishlist.getName(),
-                        wishlist.getDescription(),
-                        0,
-                        null, // coverImageUrl тимчасово null
-                        wishlist.getPrivacyStatus(),
-                        wishlist.getShowBooked() != null ? wishlist.getShowBooked() : false,
-                        wishlist.getCreatedAt()
-                ))
+                .map(wishlist -> {
+                    int itemCount = (int) wishRepository.countByWishlistId(wishlist.getId());
+                    String coverImageUrl = wishRepository
+                            .findFirstByWishlistIdAndImageUrlIsNotNullOrderByCreatedAtAsc(wishlist.getId())
+                            .map(wish -> wish.getImageUrl())
+                            .orElse(null);
+
+                    return new WishlistResponseDTO(
+                            wishlist.getId(),
+                            wishlist.getName(),
+                            wishlist.getDescription(),
+                            itemCount,
+                            coverImageUrl,
+                            wishlist.getPrivacyStatus(),
+                            wishlist.getShowBooked() != null ? wishlist.getShowBooked() : false,
+                            wishlist.getCreatedAt()
+                    );
+                })
                 .toList();
     }
 
@@ -141,6 +153,12 @@ public class WishlistServiceImpl implements WishlistService {
 
         Wishlist updatedWishlist = wishlistRepository.save(wishlist);
 
+        int itemCount = (int) wishRepository.countByWishlistId(updatedWishlist.getId());
+        String coverImageUrl = wishRepository
+                .findFirstByWishlistIdAndImageUrlIsNotNullOrderByCreatedAtAsc(updatedWishlist.getId())
+                .map(wish -> wish.getImageUrl())
+                .orElse(null);
+
         WishlistResponseDTO responseDTO = new WishlistResponseDTO();
         responseDTO.setId(updatedWishlist.getId());
         responseDTO.setName(updatedWishlist.getName());
@@ -148,8 +166,8 @@ public class WishlistServiceImpl implements WishlistService {
         responseDTO.setPrivacyStatus(updatedWishlist.getPrivacyStatus());
         responseDTO.setShowBooked(updatedWishlist.getShowBooked());
         responseDTO.setCreatedAt(updatedWishlist.getCreatedAt());
-        responseDTO.setItemCount(0);
-        responseDTO.setCoverImageUrl(null);
+        responseDTO.setItemCount(itemCount);
+        responseDTO.setCoverImageUrl(coverImageUrl);
 
         return responseDTO;
     }
