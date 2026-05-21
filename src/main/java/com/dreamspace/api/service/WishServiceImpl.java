@@ -48,7 +48,7 @@ public class WishServiceImpl implements WishService{
             wish.setPriority(Priority.HIGH);
         } else {
             try {
-                wish.setPriority(Priority.valueOf(dto.getPriority().toUpperCase())); //що це означає?
+                wish.setPriority(Priority.valueOf(dto.getPriority().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 wish.setPriority(Priority.HIGH);
             }
