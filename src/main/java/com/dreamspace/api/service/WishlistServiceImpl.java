@@ -68,7 +68,7 @@ public class WishlistServiceImpl implements WishlistService {
     public WishlistDetailsDTO getWishlistDetails(Long id, String email){
         Wishlist wishlist = wishlistRepository.findById(id)
                 .orElseThrow(() -> new WishlistNotFoundException());
-        boolean isOwner = wishlist.getUser().getEmail().equals(email); // що це значить?
+        boolean isOwner = wishlist.getUser().getEmail().equals(email);
         if (!isOwner && wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE) {
             throw new AccessDeniedException();
         }
