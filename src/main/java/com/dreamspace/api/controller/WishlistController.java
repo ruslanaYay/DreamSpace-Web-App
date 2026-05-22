@@ -1,9 +1,7 @@
 package com.dreamspace.api.controller;
 
-import com.dreamspace.api.dto.WishlistDetailsDTO;
-import com.dreamspace.api.dto.WishlistRequestDTO; // Додали новий імпорт
-import com.dreamspace.api.dto.WishlistResponseDTO;
-import com.dreamspace.api.dto.WishlistUpdateRequestDTO;
+import com.dreamspace.api.dto.*;
+import com.dreamspace.api.service.WishService;
 import com.dreamspace.api.service.WishlistService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +25,8 @@ public class WishlistController {
 
     @Autowired
     private WishlistService wishlistService;
+    @Autowired
+    private WishService wishService;
 
     @GetMapping
     public ResponseEntity<List<WishlistResponseDTO>> getWishlists() {
@@ -60,5 +60,13 @@ public class WishlistController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         WishlistResponseDTO responseDTO = wishlistService.updateWishlist(id, requestDTO, email);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
+    //отримання всіх бажань вішліста
+    @GetMapping("/{wishlistId}/wishes")
+    public ResponseEntity<List<WishResponseDTO>> getWishlistWishes(@PathVariable Long wishlistId){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<WishResponseDTO> wishes = wishService.getWishlistWishes(wishlistId, email);
+        return new ResponseEntity<>(wishes, HttpStatus.OK);
     }
 }

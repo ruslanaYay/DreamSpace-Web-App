@@ -2,9 +2,11 @@ package com.dreamspace.api.service;
 
 import com.dreamspace.api.dto.WishRequestDTO;
 import com.dreamspace.api.dto.WishResponseDTO;
+import com.dreamspace.api.dto.WishlistDetailsDTO;
 import com.dreamspace.api.entity.Wish;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.Priority;
+import com.dreamspace.api.enums.PrivacyStatus;
 import com.dreamspace.api.exception.AccessDeniedException;
 import com.dreamspace.api.exception.WishlistNotFoundException;
 import com.dreamspace.api.repository.WishRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class WishServiceImpl implements WishService{
@@ -48,7 +51,7 @@ public class WishServiceImpl implements WishService{
             wish.setPriority(Priority.HIGH);
         } else {
             try {
-                wish.setPriority(Priority.valueOf(dto.getPriority().toUpperCase())); //що це означає?
+                wish.setPriority(Priority.valueOf(dto.getPriority().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 wish.setPriority(Priority.HIGH);
             }
@@ -66,6 +69,28 @@ public class WishServiceImpl implements WishService{
                 savedWish.getPriority(),
                 savedWish.getCreatedAt()
         );
-
+    }
+    @Override
+    public List<WishResponseDTO> getWishlistWishes(Long wishlistId, String email){
+        Wishlist wishlist = wishlistRepository.findById(wishlistId)
+                .orElseThrow(() -> new WishlistNotFoundException());
+        boolean isOwner = wishlist.getUser().getEmail().equals(email);
+        if (!isOwner && wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE) {
+            throw new AccessDeniedException();
+        }
+        List<Wish> wishes = wishRepository.findAllByWishlist_IdOrderByCreatedAtDesc(wishlistId);
+        return wishes.stream()
+                .map(wish -> new WishResponseDTO(
+                        wish.getId(),
+                        wish.getWishlist().getId(),
+                        wish.getName(),
+                        wish.getStoreLink(),
+                        wish.getPrice(),
+                        wish.getDescription(),
+                        wish.getImageUrl(),
+                        wish.getPriority(),
+                        wish.getCreatedAt()
+                ))
+                .toList();
     }
 }
