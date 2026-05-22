@@ -7,6 +7,7 @@ export const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showStub, setShowStub] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -116,9 +117,13 @@ export const Login = () => {
           </div>
 
           <div className="text-start mb-4">
-            <Link to="/resetpassword" style={{ color: '#6c757d', fontSize: '0.9rem', textDecoration: 'none' }}>
+            {/* Замінили Link на кнопку-посилання для виклику заглушки */}
+            <span 
+              onClick={() => setShowStub(true)}
+              style={{ color: '#6c757d', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'none' }}
+            >
               Забули пароль?
-            </Link>
+            </span>
           </div>
 
           <button type="submit" className="btn btn-purple w-100 py-2 mb-3" disabled={isLoading}>
