@@ -44,20 +44,28 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
     setServerError("");
     setErrors({});
 
-    // Триммінг даних (ігнорування пробілів на початку та в кінці)
+    // Підготовка даних (Триммінг)
     const cleanedData = {
-      ...formData,
       name: formData.name.trim(),
-      description: formData.description.trim()
+      description: formData.description.trim(),
+      privacyStatus: formData.privacyStatus,
+      showBooked: formData.showBooked
     };
 
-    // Програмна перевірка цілісності (після ігнорування пробілів)
+    // Клієнтська валідація (щоб не смикати API дарма)
     if (!cleanedData.name) {
-      setErrors({ name: "Назва не може бути порожньою" });
+      setErrors({ name: "Це поле обов’язкове" });
       return;
     }
 
     const token = localStorage.getItem('token');
+    
+    // Перевірка наявності токена перед запитом
+    if (!token) {
+      setServerError("Увійдіть в обліковий запис (відсутній токен)");
+      return;
+    }
+
     try {
       const response = await fetch(`http://localhost:8085/api/wishlists/${wishlistData.id}`, {
         method: 'PUT',
@@ -68,30 +76,52 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
         body: JSON.stringify(cleanedData)
       });
 
-      // Перевірка на порожню відповідь сервера перед парсингом
-      const contentType = response.headers.get("content-type");
-      const data = contentType && contentType.includes("application/json") 
-        ? await response.json() 
-        : null;
+      const data = await response.json();
 
-      if (!response.ok) {
-        // 3. Відображення серверних помилок валідації
-        if (data && data.errors) {
-          // Прив'язка тексту помилки до відповідного поля (наприклад, errors.name)
-          setErrors(data.errors);
-        } else {
-          setServerError(data?.message || "Сталася помилка при збереженні");
-        }
+      if (response.ok) { // Status: 200 OK
+        onUpdate(data); 
+        onClose();
         return;
       }
 
-      onUpdate(data); 
-      onClose();      
+      // Обробка статусів помилок
+      switch (response.status) {
+        case 400: // Bad Request (Помилки валідації)
+          if (data && typeof data === 'object' && !data.message) {
+            // Прив'язуємо помилки до полів: { "name": "..." }
+            setErrors(data); 
+          } else {
+            setServerError(data.message || "Некоректні дані");
+          }
+          break;
+
+        case 401: // Unauthorized
+          setServerError("Увійдіть в обліковий запис");
+          // Тут можна додати логіку navigate('/login')
+          break;
+
+        case 403: // Forbidden
+          setServerError("Доступ заборонено (ви не є власником)");
+          break;
+
+        case 404: // Not Found
+          setServerError("Вказаний вішліст не знайдено");
+          break;
+
+        case 500: // Internal Server Error
+          setServerError("Сталася неочікувана помилка на сервері");
+          break;
+
+        default:
+          setServerError(data?.message || "Сталася помилка при збереженні");
+      }
+
     } catch (err) {
-      setServerError("Не вдалося підключитися до сервера");
+      // Обробка помилки мережі (Network Error)
+      setServerError("Не вдалося підключитися до сервера. Перевірте з'єднання.");
     }
   };
-
+  
   if (!show) return null;
 
   return (
