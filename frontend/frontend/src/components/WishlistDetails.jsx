@@ -6,34 +6,52 @@ export const WishlistDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState(null);
-  const [wishes, setWishes] = useState([]); // Додаємо стан для бажань
+  const [wishes, setWishes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Стан для обробки помилок
 
   useEffect(() => {
-    const fetchWishlistDetails = async () => {
+    const fetchWishlistData = async () => {
       const token = localStorage.getItem('token');
-      try {
-        const response = await fetch(`http://localhost:8085/api/wishlists/${id}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
 
-        if (response.ok) {
-          const data = await response.json();
-          setWishlist(data);
-          // Припускаємо, що DTO вішліста тепер містить список бажань
-          setWishes(data.wishes || []); 
+      try {
+        setLoading(true);
+        
+        // Виконуємо два запити паралельно
+        const [wishlistResponse, wishesResponse] = await Promise.all([
+          fetch(`http://localhost:8085/api/wishlists/${id}`, { method: 'GET', headers }),
+          fetch(`http://localhost:8085/api/wishlists/${id}/wishes`, { method: 'GET', headers })
+        ]);
+
+        // Обробка помилок для вішліста (401, 403, 404, 500)
+        if (!wishlistResponse.ok) {
+          const errorData = await wishlistResponse.json();
+          if (wishlistResponse.status === 401) alert("Увійдіть в обліковий запис");
+          if (wishlistResponse.status === 403) alert("Доступ заборонено");
+          if (wishlistResponse.status === 404) alert("Вказаний вішліст не знайдено");
+          throw new Error(errorData.message || 'Помилка сервера');
         }
+
+        const wishlistData = await wishlistResponse.json();
+        const wishesData = await wishesResponse.json();
+
+        setWishlist(wishlistData);
+        // Ігноруємо wishlistData.wishes і записуємо дані з окремого ендпоінту
+        setWishes(Array.isArray(wishesData) ? wishesData : []);
+        
       } catch (err) {
-        console.error("Помилка:", err);
+        console.error("Помилка завантаження:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchWishlistDetails();
+
+    fetchWishlistData();
   }, [id]);
 
   // Функція для отримання іконки пріоритету
@@ -47,10 +65,11 @@ export const WishlistDetails = () => {
   };
 
   if (loading) return <div className="spinner-border"></div>;
+  if (error) return <div className="alert alert-danger m-4">{error}</div>;
 
   return (
     <div className="container-fluid p-4 bg-light min-vh-100">
-      {/* Заголовок (залишається як був) */}
+      {/* Заголовок */}
       <div className="d-flex align-items-start mb-4">
           <button onClick={() => navigate('/wishlists')} className="btn btn-link text-dark p-0 me-3 mt-1 shadow-none">
             <i className="bi bi-arrow-left fs-3"></i>
@@ -62,7 +81,7 @@ export const WishlistDetails = () => {
       </div>
 
       <div className="d-flex flex-wrap gap-4 mt-4">
-        {/* Кнопка додавання (залишається як була) */}
+        {/* Кнопка додавання */}
         <div className="card shadow-sm border-0 item-card-container" onClick={() => navigate(`/wishlists/${id}/add-item`)} style={{ cursor: 'pointer', borderRadius: '12px' }}>
           <div className="item-image-area">
             <div className="item-plus-circle"><i className="bi bi-plus-lg text-white"></i></div>
@@ -70,7 +89,7 @@ export const WishlistDetails = () => {
           <div className="card-body p-0"></div>
         </div>
 
-        {/* --- Рендеринг справжніх бажань з бази даних --- */}
+        {/* Рендеринг справжніх бажань з нового API */}
         {wishes.map((wish) => (
           <div key={wish.id} className="card shadow-sm border-0 item-card-container" style={{ borderRadius: '12px' }}>
             <div className="item-image-area position-relative">
@@ -80,7 +99,6 @@ export const WishlistDetails = () => {
                 <i className="bi bi-image text-light fs-1"></i>
               )}
               
-              {/* Іконка пріоритету в кутку (згідно з Критеріями) */}
               <div className="position-absolute bottom-0 start-0 m-2">
                 <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
               </div>
@@ -89,7 +107,6 @@ export const WishlistDetails = () => {
             <div className="card-body px-3 py-2">
               <h6 className="fw-bold mb-1 text-truncate">{wish.name}</h6>
               <p className="text-primary fw-bold mb-0">
-                {/* Форматування ціни: якщо 0 або null -> 0.00 */}
                 {(wish.price || 0).toFixed(2)} грн
               </p>
             </div>
