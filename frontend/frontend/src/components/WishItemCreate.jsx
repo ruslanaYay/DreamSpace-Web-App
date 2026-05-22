@@ -82,7 +82,7 @@ export const WishItemCreate = () => {
 
     const token = localStorage.getItem('token');
     const formDataImage = new FormData();
-    formDataImage.append('image', selectedFile); 
+    formDataImage.append('file', selectedFile); 
 
     const response = await fetch('http://localhost:8085/api/images/upload', {
       method: 'POST',
