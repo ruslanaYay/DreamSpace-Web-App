@@ -14,15 +14,16 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
   const [serverError, setServerError] = useState("");
 
   // 1. Автоматична ініціалізація стейту форми актуальними даними
+  // Додано перевірку [show], щоб дані оновлювалися саме в момент відкриття вікна
   useEffect(() => {
-    if (wishlistData) {
+    if (show && wishlistData) {
       setFormData({
         name: wishlistData.name || '',
         description: wishlistData.description || '',
         privacyStatus: wishlistData.privacyStatus || 'LINK',
         showBooked: wishlistData.showBooked ?? false
       });
-      setErrors({}); // Скидаємо помилки при відкритті
+      setErrors({}); 
       setServerError("");
     }
   }, [wishlistData, show]);
@@ -33,7 +34,7 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    // Очищаємо помилку поля при зміні
+    
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
@@ -41,6 +42,7 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError("");
+    setErrors({});
 
     // Триммінг даних (ігнорування пробілів на початку та в кінці)
     const cleanedData = {
@@ -49,9 +51,9 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
       description: formData.description.trim()
     };
 
-    // Клієнтська перевірка
+    // Програмна перевірка цілісності (після ігнорування пробілів)
     if (!cleanedData.name) {
-      setErrors({ name: "Назва є обов'язковою" });
+      setErrors({ name: "Назва не може бути порожньою" });
       return;
     }
 
@@ -66,21 +68,25 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
         body: JSON.stringify(cleanedData)
       });
 
-      const data = await response.json();
+      // Перевірка на порожню відповідь сервера перед парсингом
+      const contentType = response.headers.get("content-type");
+      const data = contentType && contentType.includes("application/json") 
+        ? await response.json() 
+        : null;
 
       if (!response.ok) {
         // 3. Відображення серверних помилок валідації
-        if (data.errors) {
-          // Якщо сервер повертає об'єкт { field: "error message" }
+        if (data && data.errors) {
+          // Прив'язка тексту помилки до відповідного поля (наприклад, errors.name)
           setErrors(data.errors);
         } else {
-          setServerError(data.message || "Сталася помилка при збереженні");
+          setServerError(data?.message || "Сталася помилка при збереженні");
         }
         return;
       }
 
-      onUpdate(data); // Оновлюємо список у батьківському компоненті
-      onClose();      // Закриваємо модалку
+      onUpdate(data); 
+      onClose();      
     } catch (err) {
       setServerError("Не вдалося підключитися до сервера");
     }
