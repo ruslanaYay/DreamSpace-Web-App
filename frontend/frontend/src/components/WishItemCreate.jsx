@@ -88,6 +88,7 @@ export const WishItemCreate = () => {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       // Content-Type НЕ ставимо вручну для FormData
+      body: formDataImage
     });
 
     const data = await response.json();
