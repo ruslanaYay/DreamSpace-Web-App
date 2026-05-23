@@ -46,10 +46,10 @@ export const WishItemCreate = () => {
   const validate = () => {
     let tempErrors = {};
     if (!formData.name.trim()) {
-      tempErrors.name = "Назва обов'язкова для заповнення";
+      tempErrors.name = "Це поле обов’язкове";
     }
     if (formData.price !== '' && parseFloat(formData.price) < 0) {
-      tempErrors.price = "Ціна не може бути меншою за 0";
+      tempErrors.price = "Значення повинне бути більше або рівне 0";
     }
     if (!formData.wishlistId) {
       tempErrors.wishlistId = "Оберіть вішліст";
