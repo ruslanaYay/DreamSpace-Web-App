@@ -80,42 +80,32 @@ export const Wishlists = () => {
 {wishlists
   .filter(l => l.name.toLowerCase().includes(searchTerm.toLowerCase()))
   .map((list) => (
-    <div key={list.id} className="wishlist-item-wrapper position-relative">
+    <div key={list.id} className="wishlist-item-wrapper">
       
-      {/* Кнопка три крапки — ТЕПЕР ПРИВ'ЯЗАНА ДО ВЕРХУ КАРТКИ */}
-      <div 
-        className="position-absolute top-0 end-0 m-2" 
-        style={{ 
-          zIndex: 30, // Вище за все інше
-          cursor: 'pointer',
-          padding: '5px' // Збільшує зону натискання
-        }}
-        onClick={(e) => toggleMenu(e, list.id)}
-      >
-        <i className="bi bi-three-dots fs-4 text-muted"></i>
-        
-        {/* Меню Редагувати — ТЕПЕР ВИПАДАЄ ПРЯМО ПІД КНОПКОЮ */}
-        {activeMenuId === list.id && (
-          <div 
-            className="position-absolute shadow bg-white py-2 px-3" 
-            style={{ 
-              top: '35px', 
-              right: '0px', 
-              zIndex: 100, 
-              borderRadius: '10px', 
-              minWidth: '130px' 
-            }}
-            onClick={(e) => handleEditClick(e, list)}
-          >
-            <span className="text-dark" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
-              Редагувати
-            </span>
-          </div>
-        )}
-      </div>
-
       <Link to={`/wishlists/${list.id}`} className="text-decoration-none">
         <div className="wishlist-card shadow-sm position-relative">
+          
+          {/* --- КНОПКА ТЕПЕР ТУТ (Всередині картки) --- */}
+          <div 
+            className="position-absolute top-0 end-0 m-2" 
+            style={{ zIndex: 30, cursor: 'pointer', padding: '5px' }}
+            onClick={(e) => toggleMenu(e, list.id)}
+          >
+            <i className="bi bi-three-dots fs-4 text-muted"></i>
+            
+            {activeMenuId === list.id && (
+              <div 
+                className="position-absolute shadow bg-white py-2 px-3" 
+                style={{ top: '35px', right: '0px', zIndex: 100, borderRadius: '10px', minWidth: '130px' }}
+                onClick={(e) => handleEditClick(e, list)}
+              >
+                <span className="text-dark" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
+                  Редагувати
+                </span>
+              </div>
+            )}
+          </div>
+
           {/* Іконка приватності */}
           <div className="position-absolute top-0 start-0 m-3" style={{ zIndex: 10 }}>
             <i className={`bi ${list.privacyStatus === 'PRIVATE' ? 'bi-lock-fill' : list.privacyStatus === 'PUBLIC' ? 'bi-eye' : 'bi-link-45deg'} status-icon`}></i>
@@ -129,6 +119,7 @@ export const Wishlists = () => {
             )}
           </div>
         </div>
+
         <div className="card-info">
           <h6 className="text-truncate fw-bold text-dark">{list.name}</h6>
           <small className="text-muted">{list.itemCount || 0} бажань</small>

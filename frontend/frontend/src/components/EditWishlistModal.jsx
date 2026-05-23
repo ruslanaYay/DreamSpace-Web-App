@@ -124,9 +124,17 @@ export const EditWishlistModal = ({ show, onClose, wishlistData, onUpdate }) => 
   
   if (!show) return null;
 
+  
   return (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered">
+    <div 
+      className="modal d-block" 
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      onClick={onClose} // Клік по фону закриє модалку
+    >
+      <div 
+        className="modal-dialog modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()} // Клік всередині вікна нічого не зробить
+      >
         <div className="modal-content p-3" style={{ borderRadius: '15px' }}>
           <div className="modal-header border-0">
             <h5 className="modal-title fw-bold">Редагувати вішліст</h5>
