@@ -171,4 +171,21 @@ public class WishlistServiceImpl implements WishlistService {
 
         return responseDTO;
     }
+
+    @Override
+    @Transactional
+    public void deleteWishlist(Long id, String currentUserEmail) {
+
+        Wishlist wishlist = wishlistRepository.findById(id)
+                .orElseThrow(() -> new WishlistNotFoundException());
+
+
+        if (!wishlist.getUser().getEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException();
+        }
+
+
+        wishlistRepository.delete(wishlist);
+    }
+
 }
