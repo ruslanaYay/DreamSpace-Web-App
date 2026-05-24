@@ -68,7 +68,7 @@ const handleSubmit = async (e) => {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light p-3">
+    <div className="d-flex align-items-center justify-content-center min-vh-100 p-3" style={{ backgroundColor: '#F3F8FE' }}>
       <div className="card shadow-sm border-0 position-relative" style={{ maxWidth: '500px', width: '100%', borderRadius: '12px' }}>
         
         {/* Кнопка закриття (Хрестик) */}
