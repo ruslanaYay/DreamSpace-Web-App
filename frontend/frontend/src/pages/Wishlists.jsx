@@ -48,11 +48,33 @@ export const Wishlists = () => {
     setActiveMenuId(null);
   };
 
-  const confirmDelete = async () => {
+const confirmDelete = async () => {
     if (!selectedWishlist) return;
-    setWishlists(prev => prev.filter(l => l.id !== selectedWishlist.id));
-    setIsDeleteModalOpen(false);
-    setSelectedWishlist(null);
+
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(`http://localhost:8085/api/wishlists/${selectedWishlist.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 204) {
+        // Успішне видалення - оновлюємо інтерфейс
+        setWishlists(prev => prev.filter(l => l.id !== selectedWishlist.id));
+        setIsDeleteModalOpen(false);
+        setSelectedWishlist(null);
+      } else {
+        // Обробка помилок від сервера
+        const errorData = await response.json();
+        alert(errorData.message || "Сталася помилка при видаленні");
+      }
+    } catch (err) {
+      console.error("Помилка при видаленні:", err);
+      alert("Не вдалося з'єднатися з сервером");
+    }
   };
 
   if (loading) return (
