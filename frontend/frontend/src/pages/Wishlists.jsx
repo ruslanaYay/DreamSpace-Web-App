@@ -48,6 +48,7 @@ export const Wishlists = () => {
     setActiveMenuId(null);
   };
 
+  //Інтеграція з API
 const confirmDelete = async () => {
     if (!selectedWishlist) return;
 
