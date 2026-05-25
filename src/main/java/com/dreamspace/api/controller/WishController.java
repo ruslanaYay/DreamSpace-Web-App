@@ -2,11 +2,13 @@ package com.dreamspace.api.controller;
 
 import com.dreamspace.api.dto.WishRequestDTO;
 import com.dreamspace.api.dto.WishResponseDTO;
+import com.dreamspace.api.dto.WishUpdateRequestDTO;
 import com.dreamspace.api.service.WishService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping; // <── ДОДАНО
 import org.springframework.web.bind.annotation.PathVariable; // <── ДОДАНО
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +29,13 @@ public class WishController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         WishResponseDTO response = wishService.createWish(requestDTO, email);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<WishResponseDTO> updateWish (@PathVariable Long id, @Valid
+    @RequestBody WishUpdateRequestDTO requestDTO){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        WishResponseDTO response = wishService.updateWish(id, requestDTO, email);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 

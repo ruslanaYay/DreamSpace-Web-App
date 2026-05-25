@@ -2,7 +2,7 @@ package com.dreamspace.api.service;
 
 import com.dreamspace.api.dto.WishRequestDTO;
 import com.dreamspace.api.dto.WishResponseDTO;
-import com.dreamspace.api.dto.WishlistDetailsDTO;
+import com.dreamspace.api.dto.WishUpdateRequestDTO;
 import com.dreamspace.api.entity.Wish;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.Priority;
@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -99,6 +98,51 @@ public class WishServiceImpl implements WishService {
     }
 
     @Override
+    public WishResponseDTO updateWish(Long wishId, WishUpdateRequestDTO dto, String currentUserEmail){
+        Wish wish = wishRepository.findById(wishId)
+                .orElseThrow(() -> new WishNotFoundException());
+        Wishlist wishlist = wish.getWishlist();
+        if (!wishlist.getUser().getEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException();
+        }
+
+        wish.setName(dto.getName());
+        wish.setStoreLink(dto.getStoreLink());
+        wish.setDescription(dto.getDescription());
+        wish.setImageUrl(dto.getImageUrl());
+
+        if (dto.getPrice() == null) {
+            wish.setPrice(BigDecimal.ZERO);
+        } else {
+            wish.setPrice(dto.getPrice());
+        }
+
+        if (dto.getPriority() == null || dto.getPriority().trim().isEmpty()) {
+            wish.setPriority(Priority.HIGH);
+        } else {
+            try {
+                wish.setPriority(Priority.valueOf(dto.getPriority().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                wish.setPriority(Priority.HIGH);
+            }
+        }
+        Wish updatedWish = wishRepository.save(wish);
+
+        return new WishResponseDTO(
+                updatedWish.getId(),
+                updatedWish.getWishlist().getId(),
+                updatedWish.getName(),
+                updatedWish.getStoreLink(),
+                updatedWish.getPrice(),
+                updatedWish.getDescription(),
+                updatedWish.getImageUrl(),
+                updatedWish.getPriority(),
+                updatedWish.getCreatedAt(),
+                wish.getIsCompleted()
+        );
+    }
+
+    @Override
     public WishResponseDTO getWishDetails(Long id, String email) {
 
         Wish wish = wishRepository.findById(id)
@@ -138,3 +182,4 @@ public class WishServiceImpl implements WishService {
         );
     }
 }
+
