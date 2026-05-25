@@ -67,7 +67,8 @@ public class WishServiceImpl implements WishService{
                 savedWish.getDescription(),
                 savedWish.getImageUrl(),
                 savedWish.getPriority(),
-                savedWish.getCreatedAt()
+                savedWish.getCreatedAt(),
+                savedWish.getIsCompleted()
         );
     }
     @Override
@@ -89,7 +90,8 @@ public class WishServiceImpl implements WishService{
                         wish.getDescription(),
                         wish.getImageUrl(),
                         wish.getPriority(),
-                        wish.getCreatedAt()
+                        wish.getCreatedAt(),
+                        wish.getIsCompleted()
                 ))
                 .toList();
     }
