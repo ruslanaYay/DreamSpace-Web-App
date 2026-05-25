@@ -8,4 +8,6 @@ import java.util.List;
 public interface WishService {
     WishResponseDTO createWish(WishRequestDTO dto, String currentUserEmail);
     List<WishResponseDTO> getWishlistWishes(Long wishlistId, String email);
+
+    WishResponseDTO getWishDetails(Long id, String email);
 }
