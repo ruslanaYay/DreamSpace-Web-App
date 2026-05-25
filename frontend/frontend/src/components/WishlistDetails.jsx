@@ -59,7 +59,7 @@ export const WishlistDetails = () => {
   if (loading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
 
   return (
-    <div className="container-fluid p-4 min-vh-100" style={{ backgroundColor: '#F8F9FD' }}>
+    <div className="container-fluid p-4 min-vh-100" style={{ backgroundColor: '#F3F8FE' }}>
       
       {/* Заголовок з олівцем */}
       <div className="d-flex align-items-center mb-1">

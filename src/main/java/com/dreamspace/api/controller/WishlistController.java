@@ -69,4 +69,18 @@ public class WishlistController {
         List<WishResponseDTO> wishes = wishService.getWishlistWishes(wishlistId, email);
         return new ResponseEntity<>(wishes, HttpStatus.OK);
     }
+
+    // видалення вішліста
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWishlist(@PathVariable Long id) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+
+        wishlistService.deleteWishlist(id, email);
+
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
 }
