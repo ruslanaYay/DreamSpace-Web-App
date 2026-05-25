@@ -39,6 +39,9 @@ public class Wish {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "is_completed", nullable = false)
+    private boolean isCompleted = false;
+
     public Wish() {}
 
     public Wish(Wishlist wishlist, String name, String storeLink, BigDecimal price,
@@ -124,6 +127,14 @@ public class Wish {
         this.createdAt = createdAt;
     }
 
+    public boolean getIsCompleted() {
+        return isCompleted;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.isCompleted = completed;
+    }
+
     @Override
     public String toString() {
         return "Wish{" +
@@ -136,6 +147,7 @@ public class Wish {
                 ", imageUrl='" + imageUrl + '\'' +
                 ", priority=" + priority +
                 ", createdAt=" + createdAt +
+                ", isCompleted=" + isCompleted +
                 '}';
     }
 }

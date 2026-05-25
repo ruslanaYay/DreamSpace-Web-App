@@ -10,4 +10,6 @@ public interface WishService {
     WishResponseDTO createWish(WishRequestDTO dto, String currentUserEmail);
     List<WishResponseDTO> getWishlistWishes(Long wishlistId, String email);
     WishResponseDTO updateWish(Long wishId, WishUpdateRequestDTO dto, String currentUserEmail);
+    WishResponseDTO getWishDetails(Long id, String email);
 }
+

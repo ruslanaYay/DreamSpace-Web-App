@@ -9,11 +9,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping; // <── ДОДАНО
+import org.springframework.web.bind.annotation.PathVariable; // <── ДОДАНО
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/wishes")
 public class WishController {
+
     @Autowired
     private WishService wishService;
 
@@ -31,4 +38,13 @@ public class WishController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
+    @GetMapping("/{id}")
+    public ResponseEntity<WishResponseDTO> getWishDetails(@PathVariable Long id) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        WishResponseDTO response = wishService.getWishDetails(id, email);
+        return ResponseEntity.ok(response);
+    }
 }

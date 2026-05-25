@@ -19,12 +19,13 @@ public class WishResponseDTO {
     private String imageUrl;
     private Priority priority;
     private LocalDateTime createdAt;
+    private boolean isCompleted;
 
     public WishResponseDTO() {
     }
 
     public WishResponseDTO(Long id, Long wishlistId, String name, String storeLink,
-                           BigDecimal price, String description, String imageUrl, Priority priority, LocalDateTime createdAt) {
+                           BigDecimal price, String description, String imageUrl, Priority priority, LocalDateTime createdAt, boolean isCompleted) {
         this.id = id;
         this.wishlistId = wishlistId;
         this.name = name;
@@ -34,6 +35,7 @@ public class WishResponseDTO {
         this.imageUrl = imageUrl;
         this.priority = priority;
         this.createdAt = createdAt;
+        this.isCompleted = isCompleted;
     }
 
     public Long getId() {
@@ -107,4 +109,8 @@ public class WishResponseDTO {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public boolean getIsCompleted() {return isCompleted;}
+
+    public void setCompleted(boolean completed) {this.isCompleted = completed;}
 }

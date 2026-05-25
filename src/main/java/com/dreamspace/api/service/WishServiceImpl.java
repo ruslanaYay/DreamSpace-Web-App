@@ -9,6 +9,7 @@ import com.dreamspace.api.enums.Priority;
 import com.dreamspace.api.enums.PrivacyStatus;
 import com.dreamspace.api.exception.AccessDeniedException;
 import com.dreamspace.api.exception.WishlistNotFoundException;
+import com.dreamspace.api.exception.WishNotFoundException;
 import com.dreamspace.api.repository.WishRepository;
 import com.dreamspace.api.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-public class WishServiceImpl implements WishService{
+public class WishServiceImpl implements WishService {
     @Autowired
     private WishRepository wishRepository;
     @Autowired
@@ -66,9 +67,11 @@ public class WishServiceImpl implements WishService{
                 savedWish.getDescription(),
                 savedWish.getImageUrl(),
                 savedWish.getPriority(),
-                savedWish.getCreatedAt()
+                savedWish.getCreatedAt(),
+                savedWish.getIsCompleted()
         );
     }
+
     @Override
     public List<WishResponseDTO> getWishlistWishes(Long wishlistId, String email){
         Wishlist wishlist = wishlistRepository.findById(wishlistId)
@@ -88,10 +91,12 @@ public class WishServiceImpl implements WishService{
                         wish.getDescription(),
                         wish.getImageUrl(),
                         wish.getPriority(),
-                        wish.getCreatedAt()
+                        wish.getCreatedAt(),
+                        wish.getIsCompleted()
                 ))
                 .toList();
     }
+
     @Override
     public WishResponseDTO updateWish(Long wishId, WishUpdateRequestDTO dto, String currentUserEmail){
         Wish wish = wishRepository.findById(wishId)
@@ -132,7 +137,49 @@ public class WishServiceImpl implements WishService{
                 updatedWish.getDescription(),
                 updatedWish.getImageUrl(),
                 updatedWish.getPriority(),
-                updatedWish.getCreatedAt()
+                updatedWish.getCreatedAt(),
+                wish.getIsCompleted()
+        );
+    }
+
+    @Override
+    public WishResponseDTO getWishDetails(Long id, String email) {
+
+        Wish wish = wishRepository.findById(id)
+                .orElseThrow(() -> new WishNotFoundException());
+
+        Wishlist wishlist = wish.getWishlist();
+
+
+        boolean isOwner = wishlist.getUser().getEmail().equals(email);
+        if (!isOwner && wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE) {
+            throw new AccessDeniedException();
+        }
+
+        BigDecimal finalPrice = (wish.getPrice() == null || wish.getPrice().compareTo(BigDecimal.ZERO) == 0)
+                ? new BigDecimal("0.00")
+                : wish.getPrice();
+
+        String finalStoreLink = (wish.getStoreLink() == null || wish.getStoreLink().trim().isEmpty())
+                ? null
+                : wish.getStoreLink();
+
+        String finalDescription = (wish.getDescription() == null || wish.getDescription().trim().isEmpty())
+                ? null
+                : wish.getDescription();
+
+        return new WishResponseDTO(
+                wish.getId(),
+                wishlist.getId(),
+                wish.getName(),
+                finalStoreLink,
+                finalPrice,
+                finalDescription,
+                wish.getImageUrl(),
+                wish.getPriority(),
+                wish.getCreatedAt(),
+                wish.getIsCompleted()
         );
     }
 }
+
