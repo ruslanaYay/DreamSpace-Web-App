@@ -35,12 +35,18 @@ public class WishlistServiceImpl implements WishlistService {
     private WishRepository wishRepository;
 
     @Override
-    public List<WishlistResponseDTO> getUserWishlists(String email) {
+    public List<WishlistResponseDTO> getUserWishlists(String email, String query) {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException());
 
         List<Wishlist> wishlists = wishlistRepository.findAllByUser(user);
+        if(query==null || query.isEmpty()) {
+            wishlists = wishlistRepository.findAllByUser(user);
+        }
+        else{
+            wishlists = wishlistRepository.findAllByUserAndNameContainingIgnoreCase(user, query.trim());
+        }
 
         return wishlists.stream()
                 .map(wishlist -> {

@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
     List<Wishlist> findAllByUser(User user);
     Optional<Wishlist> findById(Long id);
+    // пошуку за частковим збігом назви без урахування регістру
+    List<Wishlist> findAllByUserAndNameContainingIgnoreCase(User user, String name);
 }
