@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { EditWishItemModal } from '../components/EditWishItemModal';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export const WishItemDetails = () => {
@@ -9,6 +10,9 @@ export const WishItemDetails = () => {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [activeMenuOpen, setActiveMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchItemDetails = async () => {
@@ -64,6 +68,12 @@ export const WishItemDetails = () => {
     fetchItemDetails();
   }, [itemId]);
 
+  const formatDate = (isoString) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+  };
+  
   // Стан завантаження
   if (loading) return (
     <div className="d-flex justify-content-center mt-5">
@@ -88,13 +98,6 @@ export const WishItemDetails = () => {
     }
   };
 
-  // Функція для форматування дати з ISO у РРРР-ММ-ДД ГГ:ХХ:СС
-  const formatDate = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    return date.toISOString().replace(/T/, ' ').replace(/\..+/, '');
-  };
-
 return (
     /* Хедер вже рендериться в App.jsx, тут тільки контент */
     <main className="flex-grow-1 position-relative" style={{ backgroundColor: '#F3F8FE', minHeight: 'calc(100vh - 82px)' }}>
@@ -111,6 +114,33 @@ return (
       >
         <i className="bi bi-arrow-left" style={{ fontSize: '2rem', color: '#333' }}></i>
       </button>
+
+      {/* МЕНЮ ДОДАТКОВИХ ДІЙ (Три крапки) */}
+      <div className="position-absolute" style={{ right: '40px', top: '20px', zIndex: 20 }}>
+        <button 
+          className="btn border-0 p-1 shadow-none bg-transparent"
+          onClick={() => setActiveMenuOpen(!activeMenuOpen)}
+        >
+          <i className="bi bi-three-dots-vertical text-dark" style={{ fontSize: '1.8rem' }}></i>
+        </button>
+
+        {activeMenuOpen && (
+          <div 
+            className="position-absolute shadow bg-white py-2" 
+            style={{ right: 0, top: '50px', borderRadius: '12px', minWidth: '160px', border: '1px solid #eee' }}
+          >
+            <button 
+              className="dropdown-item py-2 px-3 d-flex align-items-center" 
+              onClick={() => {
+                setIsEditModalOpen(true);
+                setActiveMenuOpen(false);
+              }}
+            >
+                Редагувати
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="container-fluid" style={{ paddingLeft: '80px', paddingTop: '60px' }}>
         <div className="d-flex flex-column flex-md-row gap-5 align-items-start">
@@ -176,6 +206,20 @@ return (
           </div>
         </div>
       </div>
+
+    {/* МОДАЛЬНЕ ВІКНО РЕДАГУВАННЯ */}
+      {isEditModalOpen && (
+        <EditWishItemModal 
+          show={isEditModalOpen}
+          wishData={item}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdate={(updatedData) => {
+            setItem(updatedData); // Миттєве оновлення даних на сторінці
+            setIsEditModalOpen(false);
+          }}
+        />
+      )}
+
     </main>
   );
 };
