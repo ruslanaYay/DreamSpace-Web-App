@@ -66,15 +66,16 @@ const AppContent = () => {
     photoUrl: localStorage.getItem('userPhoto')
   };
 
-  const isAuthPage = [
-    '/register', 
-    '/login', 
-    '/resetpassword'
-  ].includes(location.pathname);
-
-  const isWishlistDetailsPage = location.pathname.startsWith('/wishlists/') && 
-                                !location.pathname.includes('/add-item');
-  const isWishDetailsPage = location.pathname.includes('/wish-items/');
+// 1. Визначаємо типи сторінок
+  const isAuthPage = ['/register', '/login', '/resetpassword'].includes(location.pathname);
+  
+  // 2. Визначаємо, де саме ми хочемо СХОВАТИ Sidebar
+  // Ховаємо на: сторінках авторизації, деталях вішліста, деталях бажання та створенні бажання
+  const hideSidebar = 
+    isAuthPage || 
+    location.pathname.includes('/wish-items/') || 
+    location.pathname.includes('/add-item') || 
+    (location.pathname.startsWith('/wishlists/') && location.pathname !== '/wishlists');
 
   return (
     <div className="app-container min-vh-100 d-flex flex-column">
@@ -95,7 +96,7 @@ const AppContent = () => {
       )}
 
       <div className="main-layout d-flex flex-grow-1">
-        {!isAuthPage && !isWishDetailsPage && !isWishlistDetailsPage && (
+        {!isAuthPage && !hideSidebar &&  (
           <aside className="sidebar-zone px-4 py-5 bg-white border-right" style={{ width: '250px' }}>
             <nav className="nav flex-column gap-3">
               

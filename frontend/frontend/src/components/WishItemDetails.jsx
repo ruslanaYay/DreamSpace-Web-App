@@ -25,6 +25,8 @@ export const WishItemDetails = () => {
     };
   
 const handleDeleteConfirm = async () => {
+  if (!deleteModal.wishId) return;
+
   setIsDeleting(true);
   const token = localStorage.getItem('token');
 
@@ -36,27 +38,24 @@ const handleDeleteConfirm = async () => {
       }
     });
 
-    // ПЕРЕВІРКА 1: Якщо статус 204 (успіх без тіла)
-    if (response.status === 204) {
-      // Видаляємо лише одну конкретну картку зі стейту
-      setWishes(prev => prev.filter(wish => wish.id !== deleteModal.wishId));
+    // Успішне видалення
+    if (response.status === 204 || response.ok) {
       setDeleteModal({ show: false, wishId: null });
-      return; // Виходимо, не намагаючись читати json()
+      
+      // ВАЖЛИВО: Використовуємо replace: true, щоб користувач не міг повернутися 
+      // кнопкою "Назад" на вже видалене бажання
+      navigate(-1); 
+      return; 
     }
 
-    // ПЕРЕВІРКА 2: Якщо статус не успішний (наприклад, 403 чи 404)
-    if (!response.ok) {
-      const data = await response.json(); // Читаємо помилку
-      switch (response.status) {
-        case 401: alert(data.message || "Увійдіть в обліковий запис"); break;
-        case 403: alert(data.message || "Доступ заборонено (ви не власник)"); break;
-        case 404: alert(data.message || "Бажання вже видалено"); break;
-        default: alert(data.message || "Помилка сервера");
-      }
-    }
+    // Якщо ми тут — значить сталася помилка сервера (4xx або 5xx)
+    const data = await response.json(); 
+    alert(data.message || "Помилка при видаленні");
+
   } catch (err) {
-    // Сюди потрапляємо лише при помилці мережі (сервер вимкнено)
-    console.error("Network error:", err);
+    // Якщо сервер повернув 204 і ми випадково викликали .json() десь поза IF, 
+    // JS викине помилку SyntaxError. Ми її ігноруємо, якщо видалення пройшло успішно.
+    console.error("Помилка:", err);
     alert("Не вдалося з'єднатися з сервером");
   } finally {
     setIsDeleting(false);
@@ -106,9 +105,6 @@ const handleDeleteConfirm = async () => {
               setErrorMessage(data.message || "Сталася помилка");
           }
         }
-      } catch (err) {
-        console.error("Network error:", err);
-        setErrorMessage("Не вдалося з'єднатися з сервером");
       } finally {
         setLoading(false);
       }
@@ -232,7 +228,7 @@ return (
             {/* Опис */}
             <div className="mb-5" style={{ maxWidth: '700px' }}>
               <p style={{ fontSize: '1.2rem', color: '#4C4C4C', lineHeight: '1.6' }}>
-                {item.description || "Опис відсутній."}
+                {item.description || " "}
               </p>
             </div>
 
