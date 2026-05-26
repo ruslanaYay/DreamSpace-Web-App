@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { EditWishlistModal } from '../components/EditWishlistModal';
 import "../App.css";
@@ -95,22 +95,25 @@ export const WishlistDetails = () => {
         </div>
 
         {wishes.map((wish) => (
-          <div key={wish.id} className="wish-item-card">
-            <div className="wish-image-container">
-              {wish.imageUrl ? (
-                <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
-              ) : (
-                <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
-              )}
-              <div className="priority-emoji">
-                <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
+          <Link key={wish.id} to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark">
+            <div className="wish-item-card">
+              <div className="wish-image-container">
+                {wish.imageUrl ? (
+                  <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
+                ) : (
+                  <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
+                )}
+                <div className="priority-emoji">
+                  <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
+                </div>
+              </div>
+              <div className="wish-card-footer">
+                <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
+                {/* Ціна з 0.00 за замовчуванням */}
+                <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
               </div>
             </div>
-            <div className="wish-card-footer">
-              <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
-              <p className="wish-price mb-0">₴{wish.price?.toLocaleString() || '0,00'}</p>
-            </div>
-          </div>
+          </Link>
         ))}
       </div>
 
