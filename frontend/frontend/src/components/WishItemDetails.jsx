@@ -113,11 +113,21 @@ const handleDeleteConfirm = async () => {
     fetchItemDetails();
   }, [itemId]);
 
-  const formatDate = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    return date.toISOString().replace(/T/, ' ').replace(/\..+/, '');
-  };
+ const formatDate = (isoString) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+
+  // Отримуємо локальні компоненти дати та часу
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  // Формуємо рядок у форматі YYYY-MM-DD HH:mm:ss
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
   
   // Стан завантаження
   if (loading) return (
