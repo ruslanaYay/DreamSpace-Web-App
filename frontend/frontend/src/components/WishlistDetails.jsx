@@ -2,36 +2,79 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { EditWishlistModal } from '../components/EditWishlistModal';
-import { EditWishItemModal } from '../components/EditWishItemModal'; // Перевірте шлях до компонента
+import { EditWishItemModal } from '../components/EditWishItemModal'; 
+import { DeleteWishModal } from './DeleteWishModal';
 import "../App.css";
 
 export const WishlistDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Дані
   const [wishlist, setWishlist] = useState(null);
   const [wishes, setWishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Стан для модалки ВІШЛІСТА
+  // Стани модальних вікон
   const [isEditListModalOpen, setIsEditListModalOpen] = useState(false);
-
-  // Стан для модалки БАЖАННЯ
   const [isEditWishModalOpen, setIsEditWishModalOpen] = useState(false);
   const [selectedWish, setSelectedWish] = useState(null);
 
-  // Стан для випадаючого меню (три крапки)
+  // Стан для видалення (прив'язка до ID та статус завантаження)
+  const [deleteModal, setDeleteModal] = useState({ show: false, wishId: null });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Стан меню (три крапки)
   const [activeMenuId, setActiveMenuId] = useState(null);
+
+  // 1. ВІДКРИТТЯ МОДАЛКИ (Прив'язка до ID конкретного бажання)
+  const openDeleteModal = (wishId) => {
+    setDeleteModal({ show: true, wishId: wishId });
+    setActiveMenuId(null); 
+  };
+
+  // 2. ЗАКРИТТЯ ВІКНА (Без виконання запиту)
+  const closeDeleteModal = () => {
+    if (!isDeleting) { // Забороняємо закриття, якщо вже йде процес видалення
+      setDeleteModal({ show: false, wishId: null });
+    }
+  };
+
+  // 3. АСИНХРОННИЙ ЗАПИТ ТА ОБРОБКА СТАНУ ЗАВАНТАЖЕННЯ
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.wishId) return;
+
+    setIsDeleting(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      const response = await fetch(`http://localhost:8085/api/wishes/${deleteModal.wishId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // 4. ЛОГІКА МИТТЄВОГО ВИДАЛЕННЯ З UI (Status 204 No Content)
+      if (response.status === 204) {
+        setWishes(prevWishes => prevWishes.filter(wish => wish.id !== deleteModal.wishId));
+        setDeleteModal({ show: false, wishId: null });
+      } else {
+        const data = await response.json();
+        alert(data.message || "Сталася помилка при видаленні");
+      }
+    } catch (err) {
+      console.error("Помилка видалення:", err);
+      alert("Не вдалося з'єднатися з сервером");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchWishlistData = async () => {
       const token = localStorage.getItem('token');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
+      const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
       try {
         setLoading(true);
@@ -40,7 +83,7 @@ export const WishlistDetails = () => {
           fetch(`http://localhost:8085/api/wishlists/${id}/wishes`, { method: 'GET', headers })
         ]);
 
-        if (!wishlistResponse.ok) throw new Error('Помилка сервера');
+        if (!wishlistResponse.ok) throw new Error('Вішліст не знайдено');
 
         const wishlistData = await wishlistResponse.json();
         const wishesData = await wishesResponse.json();
@@ -53,11 +96,9 @@ export const WishlistDetails = () => {
         setLoading(false);
       }
     };
-
     fetchWishlistData();
   }, [id]);
 
-  // Закриття меню при кліку в будь-якому місці
   useEffect(() => {
     const closeMenu = () => setActiveMenuId(null);
     document.addEventListener('click', closeMenu);
@@ -73,24 +114,17 @@ export const WishlistDetails = () => {
     }
   };
 
-  // Відкриття модалки редагування бажання
-  const handleEditWishClick = (wish) => {
-    setSelectedWish(wish);
-    setIsEditWishModalOpen(true);
-    setActiveMenuId(null);
-  };
-
   if (loading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
+  if (error) return <div className="text-center mt-5 text-danger"><h3>{error}</h3></div>;
 
   return (
     <div className="container-fluid p-4 min-vh-100" style={{ backgroundColor: '#F3F8FE' }}>
       
-      {/* Заголовок */}
+      {/* Шапка вішліста */}
       <div className="d-flex align-items-center mb-1">
         <button onClick={() => navigate('/wishlists')} className="btn btn-link text-dark p-0 me-3 shadow-none">
           <i className="bi bi-arrow-left fs-3"></i>
         </button>
-        
         <div className="d-flex align-items-center">
           <h2 className="fw-bold mb-0 me-2 text-dark" style={{ fontFamily: 'Raleway, sans-serif' }}>
             {wishlist?.name}
@@ -104,23 +138,19 @@ export const WishlistDetails = () => {
           </button>
         </div>
       </div>
-      
       <p className="text-muted mb-5 header-description ms-5">{wishlist?.description}</p>
 
       {/* Сітка бажань */}
       <div className="wishes-grid">
-        {/* Картка додавання */}
         <div className="wish-item-card add-new-card" onClick={() => navigate(`/wishlists/${id}/add-item`)}>
           <div className="wish-image-container d-flex align-items-center justify-content-center">
-            <div className="plus-circle">
-              <i className="bi bi-plus-lg text-white fs-4"></i>
-            </div>
+            <div className="plus-circle"><i className="bi bi-plus-lg text-white fs-4"></i></div>
           </div>
         </div>
 
         {wishes.map((wish) => (
           <div key={wish.id} className="wish-item-wrapper position-relative">
-            {/* Кнопка Три крапки */}
+            {/* Кнопка дій */}
             <div 
               className="position-absolute top-0 end-0 m-2" 
               style={{ zIndex: 20 }}
@@ -130,13 +160,9 @@ export const WishlistDetails = () => {
                 setActiveMenuId(activeMenuId === wish.id ? null : wish.id);
               }}
             >
-            <button 
-              className="btn border-0 p-1 shadow-none bg-transparent" 
-              style={{ border: 'none' }}
-            >
-              {/* Змінено на bi-three-dots для горизонтального положення */}
-              <i className="bi bi-three-dots fs-4 text-dark"></i>
-            </button>
+              <button className="btn border-0 p-1 shadow-none bg-transparent">
+                <i className="bi bi-three-dots fs-4 text-dark"></i>
+              </button>
 
               {activeMenuId === wish.id && (
                 <div 
@@ -144,17 +170,16 @@ export const WishlistDetails = () => {
                   style={{ top: '35px', right: '0', zIndex: 100, borderRadius: '10px', minWidth: '140px', border: '1px solid #eee' }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button 
-                    className="dropdown-item py-2 px-3 small d-flex align-items-center" 
-                    onClick={() => handleEditWishClick(wish)}
-                  >
+                  <button className="dropdown-item py-2 px-3 small" onClick={() => { setSelectedWish(wish); setIsEditWishModalOpen(true); }}>
                     Редагувати
+                  </button>
+                  <button className="dropdown-item py-2 px-3 small text-danger" onClick={() => openDeleteModal(wish.id)}>
+                    Видалити
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Картка бажання */}
             <Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
               <div className="wish-item-card h-100">
                 <div className="wish-image-container">
@@ -163,9 +188,7 @@ export const WishlistDetails = () => {
                   ) : (
                     <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
                   )}
-                  <div className="priority-emoji">
-                    <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
-                  </div>
+                  <div className="priority-emoji"><i className={`bi ${getPriorityIcon(wish.priority)}`}></i></div>
                 </div>
                 <div className="wish-card-footer">
                   <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
@@ -177,7 +200,7 @@ export const WishlistDetails = () => {
         ))}
       </div>
 
-      {/* Модалка редагування Вішліста */}
+      {/* Модальні вікна */}
       <EditWishlistModal 
         show={isEditListModalOpen}
         wishlistData={wishlist}
@@ -185,14 +208,18 @@ export const WishlistDetails = () => {
         onUpdate={(updated) => setWishlist(updated)}
       />
 
-      {/* Модалка редагування Бажання */}
       <EditWishItemModal 
         show={isEditWishModalOpen} 
         wishData={selectedWish} 
         onClose={() => setIsEditWishModalOpen(false)}
-        onUpdate={(updated) => {
-          setWishes(prev => prev.map(w => w.id === updated.id ? updated : w));
-        }}
+        onUpdate={(updated) => setWishes(prev => prev.map(w => w.id === updated.id ? updated : w))}
+      />
+
+      <DeleteWishModal 
+        show={deleteModal.show}
+        isLoading={isDeleting}
+        onClose={closeDeleteModal} // Хрестик та "Скасувати" використовують це
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );

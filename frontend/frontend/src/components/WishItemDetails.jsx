@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { EditWishItemModal } from '../components/EditWishItemModal';
+import { DeleteWishModal } from './DeleteWishModal';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export const WishItemDetails = () => {
@@ -13,6 +14,54 @@ export const WishItemDetails = () => {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeMenuOpen, setActiveMenuOpen] = useState(false);
+
+  
+    const [deleteModal, setDeleteModal] = useState({ show: false, wishId: null });
+    const [isDeleting, setIsDeleting] = useState(false);
+  
+    const openDeleteModal = (id) => {
+      setDeleteModal({ show: true, wishId: id });
+      setActiveMenuId(null); // Закриваємо випадаюче меню (три крапки)
+    };
+  
+const handleDeleteConfirm = async () => {
+  setIsDeleting(true);
+  const token = localStorage.getItem('token');
+
+  try {
+    const response = await fetch(`http://localhost:8085/api/wishes/${deleteModal.wishId}`, {
+      method: 'DELETE',
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // ПЕРЕВІРКА 1: Якщо статус 204 (успіх без тіла)
+    if (response.status === 204) {
+      // Видаляємо лише одну конкретну картку зі стейту
+      setWishes(prev => prev.filter(wish => wish.id !== deleteModal.wishId));
+      setDeleteModal({ show: false, wishId: null });
+      return; // Виходимо, не намагаючись читати json()
+    }
+
+    // ПЕРЕВІРКА 2: Якщо статус не успішний (наприклад, 403 чи 404)
+    if (!response.ok) {
+      const data = await response.json(); // Читаємо помилку
+      switch (response.status) {
+        case 401: alert(data.message || "Увійдіть в обліковий запис"); break;
+        case 403: alert(data.message || "Доступ заборонено (ви не власник)"); break;
+        case 404: alert(data.message || "Бажання вже видалено"); break;
+        default: alert(data.message || "Помилка сервера");
+      }
+    }
+  } catch (err) {
+    // Сюди потрапляємо лише при помилці мережі (сервер вимкнено)
+    console.error("Network error:", err);
+    alert("Не вдалося з'єднатися з сервером");
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   useEffect(() => {
     const fetchItemDetails = async () => {
@@ -138,6 +187,10 @@ return (
             >
                 Редагувати
             </button>
+            <div className="dropdown-divider mx-2"></div>
+            <button className="dropdown-item py-2 px-3 text-danger d-flex align-items-center" onClick={() => openDeleteModal(item.id)}>
+               Видалити
+            </button>
           </div>
         )}
       </div>
@@ -207,18 +260,20 @@ return (
         </div>
       </div>
 
-    {/* МОДАЛЬНЕ ВІКНО РЕДАГУВАННЯ */}
-      {isEditModalOpen && (
-        <EditWishItemModal 
-          show={isEditModalOpen}
-          wishData={item}
-          onClose={() => setIsEditModalOpen(false)}
-          onUpdate={(updatedData) => {
-            setItem(updatedData); // Миттєве оновлення даних на сторінці
-            setIsEditModalOpen(false);
-          }}
-        />
-      )}
+    {/* МОДАЛКИ */}
+      <EditWishItemModal 
+        show={isEditModalOpen} 
+        wishData={item} 
+        onClose={() => setIsEditModalOpen(false)} 
+        onUpdate={(updatedData) => { setItem(updatedData); setIsEditModalOpen(false); }} 
+      />
+
+      <DeleteWishModal 
+        show={deleteModal.show} 
+        isLoading={isDeleting} 
+        onClose={() => setDeleteModal({ show: false, wishId: null })} 
+        onConfirm={handleDeleteConfirm} 
+      />
 
     </main>
   );
