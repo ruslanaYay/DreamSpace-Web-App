@@ -181,6 +181,31 @@ public class WishServiceImpl implements WishService {
                 wish.getIsCompleted()
         );
     }
+
+    @Override
+    public WishResponseDTO toggleWishStatus(Long id, String email) {
+        Wish wish = wishRepository.findById(id)
+                .orElseThrow(() -> new WishNotFoundException());
+        if (!wish.getWishlist().getUser().getEmail().equals(email)) {
+            throw new AccessDeniedException();
+        }
+
+        wish.setCompleted(!wish.getIsCompleted());
+        Wish savedWish = wishRepository.save(wish);
+
+        return new WishResponseDTO(
+                savedWish.getId(),
+                savedWish.getWishlist().getId(),
+                savedWish.getName(),
+                savedWish.getStoreLink(),
+                savedWish.getPrice(),
+                savedWish.getDescription(),
+                savedWish.getImageUrl(),
+                savedWish.getPriority(),
+                savedWish.getCreatedAt(),
+                savedWish.getIsCompleted()
+        );
+    }
     @Override
     public void deleteWish(Long id, String email) {
         Wish wish = wishRepository.findById(id)

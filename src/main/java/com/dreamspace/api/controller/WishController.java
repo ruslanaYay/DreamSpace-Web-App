@@ -5,7 +5,6 @@ import com.dreamspace.api.dto.WishResponseDTO;
 import com.dreamspace.api.dto.WishUpdateRequestDTO;
 import com.dreamspace.api.service.WishService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 @RestController
 @RequestMapping("/api/wishes")
@@ -46,6 +46,14 @@ public class WishController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         WishResponseDTO response = wishService.getWishDetails(id, email);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<WishResponseDTO> toggleWishStatus(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        WishResponseDTO response = wishService.toggleWishStatus(id, email);
         return ResponseEntity.ok(response);
     }
 
