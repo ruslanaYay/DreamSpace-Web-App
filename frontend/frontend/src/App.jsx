@@ -66,9 +66,13 @@ const AppContent = () => {
     photoUrl: localStorage.getItem('userPhoto')
   };
 
-  const isAuthPage = 
-  ['/register', '/login', '/resetpassword', '/wishlists/create'].includes(location.pathname) || 
-  location.pathname.match(/\/wishlists\/.+\/add-item/);
+  const isAuthPage = [
+    '/register', 
+    '/login', 
+    '/resetpassword'
+  ].includes(location.pathname);
+
+  const isWishDetailsPage = location.pathname.includes('/wish-items/');
 
   return (
     <div className="app-container min-vh-100 d-flex flex-column">
@@ -89,8 +93,7 @@ const AppContent = () => {
       )}
 
       <div className="main-layout d-flex flex-grow-1">
-        
-        {!isAuthPage && (
+        {!isAuthPage && !isWishDetailsPage && (
           <aside className="sidebar-zone px-4 py-5 bg-white border-right" style={{ width: '250px' }}>
             <nav className="nav flex-column gap-3">
               
