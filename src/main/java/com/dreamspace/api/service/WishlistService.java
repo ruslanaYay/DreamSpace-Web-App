@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface WishlistService {
 
-    List<WishlistResponseDTO> getUserWishlists(String email);
+    List<WishlistResponseDTO> getUserWishlists(String email, String query);
 
 
     WishlistResponseDTO createWishlist(String email, WishlistRequestDTO dto);

@@ -29,10 +29,10 @@ public class WishlistController {
     private WishService wishService;
 
     @GetMapping
-    public ResponseEntity<List<WishlistResponseDTO>> getWishlists() {
+    public ResponseEntity<List<WishlistResponseDTO>> getWishlists(@RequestParam(required = false) String query) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<WishlistResponseDTO> myWishlists = wishlistService.getUserWishlists(email);
+        List<WishlistResponseDTO> myWishlists = wishlistService.getUserWishlists(email, query);
 
         return new ResponseEntity<>(myWishlists, HttpStatus.OK);
     }
