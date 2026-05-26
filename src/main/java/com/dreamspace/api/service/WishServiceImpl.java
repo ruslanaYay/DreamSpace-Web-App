@@ -181,5 +181,17 @@ public class WishServiceImpl implements WishService {
                 wish.getIsCompleted()
         );
     }
+    @Override
+    public void deleteWish(Long id, String email) {
+        Wish wish = wishRepository.findById(id)
+                .orElseThrow(() -> new WishNotFoundException());
+
+        if (!wish.getWishlist().getUser().getEmail().equals(email)) {
+            throw new AccessDeniedException();
+        }
+
+        wishRepository.delete(wish);
+    }
 }
+
 

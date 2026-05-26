@@ -5,6 +5,7 @@ import com.dreamspace.api.dto.WishResponseDTO;
 import com.dreamspace.api.dto.WishUpdateRequestDTO;
 import com.dreamspace.api.service.WishService;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,5 +47,12 @@ public class WishController {
 
         WishResponseDTO response = wishService.getWishDetails(id, email);
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWish(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        wishService.deleteWish(id, email);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

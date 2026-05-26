@@ -11,5 +11,6 @@ public interface WishService {
     List<WishResponseDTO> getWishlistWishes(Long wishlistId, String email);
     WishResponseDTO updateWish(Long wishId, WishUpdateRequestDTO dto, String currentUserEmail);
     WishResponseDTO getWishDetails(Long id, String email);
+    void deleteWish(Long id, String email);
 }
 
