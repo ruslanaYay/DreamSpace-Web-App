@@ -72,6 +72,8 @@ const AppContent = () => {
     '/resetpassword'
   ].includes(location.pathname);
 
+  const isWishlistDetailsPage = location.pathname.startsWith('/wishlists/') && 
+                                !location.pathname.includes('/add-item');
   const isWishDetailsPage = location.pathname.includes('/wish-items/');
 
   return (
@@ -93,7 +95,7 @@ const AppContent = () => {
       )}
 
       <div className="main-layout d-flex flex-grow-1">
-        {!isAuthPage && !isWishDetailsPage && (
+        {!isAuthPage && !isWishDetailsPage && !isWishlistDetailsPage && (
           <aside className="sidebar-zone px-4 py-5 bg-white border-right" style={{ width: '250px' }}>
             <nav className="nav flex-column gap-3">
               
