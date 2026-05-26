@@ -56,4 +56,11 @@ public class WishController {
         WishResponseDTO response = wishService.toggleWishStatus(id, email);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWish(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        wishService.deleteWish(id, email);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
