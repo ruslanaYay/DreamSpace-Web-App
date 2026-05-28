@@ -83,7 +83,20 @@ const handleDeleteConfirm = async () => {
   }
 };
 
-  // Завантаження даних при вході на сторінку
+
+  const [showToast, setShowToast] = useState(false);
+
+  const handleShare = () => {
+    // Копіюємо посилання на поточну сторінку в буфер обміну
+    navigator.clipboard.writeText(window.location.href);
+  
+    // Показуємо Toast
+    setShowToast(true);
+  
+    // Автоматично приховуємо через 3 секунди
+    setTimeout(() => setShowToast(false), 3000);
+  };
+// Завантаження даних при вході на сторінку
   useEffect(() => {
     const fetchWishlistData = async () => {
       const token = localStorage.getItem('token');
@@ -199,13 +212,25 @@ const toggleWishStatus = async (e, wishId) => {
           <h2 className="fw-bold mb-0 me-2 text-dark" style={{ fontFamily: 'Raleway, sans-serif' }}>
             {wishlist?.name}
           </h2>
-          <button 
-            className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
-            onClick={() => setIsEditListModalOpen(true)}
-            style={{ width: '32px', height: '32px', backgroundColor: '#F0F0F0', borderRadius: '8px' }}
-          >
-            <i className="bi bi-pencil-fill text-muted" style={{ fontSize: '14px' }}></i>
-          </button>
+          <div className="d-flex align-items-center gap-2">
+            {/* Кнопка редагування */}
+            <button 
+              className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
+              onClick={() => setIsEditListModalOpen(true)}
+              style={{ width: '32px', height: '32px', backgroundColor: '#F0F0F0', borderRadius: '8px' }}
+            >
+             <i className="bi bi-pencil-fill text-muted" style={{ fontSize: '14px' }}></i>
+            </button>
+
+            {/* Кнопка поділитися */}
+            <button 
+              className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
+              onClick={handleShare} // Функція для копіювання посилання
+              style={{ width: '32px', height: '32px', backgroundColor: '#F0F0F0', borderRadius: '8px' }}
+            >
+              <i className="bi bi-share-fill text-muted" style={{ fontSize: '14px' }}></i>
+            </button>
+          </div>
         </div>
       </div>
       
