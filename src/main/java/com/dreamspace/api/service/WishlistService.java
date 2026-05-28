@@ -18,4 +18,5 @@ public interface WishlistService {
 
     void deleteWishlist(Long id, String currentUserEmail);
     String getShareLink(Long id, String currentUserEmail);
+    WishlistResponseDTO getWishlistById(Long id);
 }
