@@ -135,6 +135,30 @@ const handleDeleteConfirm = async () => {
   if (loading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
   if (error) return <div className="text-center mt-5 text-danger"><h3>{error}</h3></div>;
 
+  // Додаємо функцію зміни статусу в WishlistDetails
+const toggleWishStatus = async (e, wishId, currentStatus) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const token = localStorage.getItem('token');
+  // Припускаємо, що статус змінюється через PATCH або PUT
+  try {
+    const response = await fetch(`http://localhost:8085/api/wishes/${wishId}/toggle-status`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (response.ok) {
+      // Оновлюємо стейт локально для миттєвого відображення
+      setWishes(prev => prev.map(w => 
+        w.id === wishId ? { ...w, isCompleted: !w.isCompleted } : w
+      ));
+    }
+  } catch (err) {
+    console.error("Помилка зміни статусу:", err);
+  }
+};
+  
   return (
     <div className="container-fluid p-4 min-vh-100" style={{ backgroundColor: '#F3F8FE' }}>
       
@@ -209,25 +233,52 @@ const handleDeleteConfirm = async () => {
               )}
             </div>
 
-            {/* Картка бажання */}
-            <Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
-              <div className="wish-item-card h-100">
-                <div className="wish-image-container">
-                  {wish.imageUrl ? (
-                    <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
-                  ) : (
-                    <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
-                  )}
-                  <div className="priority-emoji">
-                    <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
-                  </div>
-                </div>
-                <div className="wish-card-footer">
-                  <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
-                  <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
-                </div>
+            {/* 2. ЗЕЛЕНА ПРИМІТКА "ВИКОНАНО" */}
+            {wish.isCompleted && (
+              <div className="completed-badge">
+                <i className="bi bi-check-lg me-1"></i> Виконано
               </div>
-            </Link>
+            )}
+
+{/* Картка бажання */}
+<Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
+  <div className="wish-item-card h-100">
+    <div className="wish-image-container position-relative">
+      {wish.imageUrl ? (
+        <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
+      ) : (
+        <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
+      )}
+      
+      {/* Пріоритет (лівий нижній кут) */}
+      <div className="priority-emoji">
+        <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
+      </div>
+
+      {/* Кнопка статусу (Галочка / Квітка) — ПРАВИЙ НИЖНІЙ КУТ */}
+<div 
+  className="icon-button-instance" 
+  onClick={(e) => toggleWishStatus(e, wish.id)}
+>
+  {wish.isCompleted ? (
+    <i className="bi bi-flower1"></i>
+  ) : (
+    <i className="bi bi-check-lg"></i>
+  )}
+  
+  {/* Підказка, що з'являється знизу */}
+  <div className="custom-tooltip">
+    {wish.isCompleted ? "Повернути бажання в активний стан" : "Позначити бажання як виконане"}
+  </div>
+</div>
+    </div>
+    
+    <div className="wish-card-footer">
+      <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
+      <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
+    </div>
+  </div>
+</Link>
           </div>
         ))}
       </div>

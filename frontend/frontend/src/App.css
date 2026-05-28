@@ -619,3 +619,82 @@ body {
     padding: 4px 10px;
     background: white;
 }
+
+
+/* Контейнер кнопки для коректного позиціонування підказки */
+.icon-button-instance {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 36px;
+  height: 36px;
+  background-color: #ffffffd9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20; /* Щоб бути поверх картинки */
+}
+
+/* Стилізація самої підказки */
+.custom-tooltip {
+  display: none;
+  position: absolute;
+  /* Змінюємо позицію на низ */
+  top: 105%; 
+  right: 0;
+  
+  background: white;
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  
+  /* Ефект тіні та рамки як на скриншоті */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid #E0E0E0;
+  
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Поява при наведенні на кнопку */
+.icon-button-instance:hover .custom-tooltip {
+  display: block;
+}
+
+/* Щоб картка не обрізала підказку, яка виходить за межі */
+.wish-item-wrapper, .wish-item-card {
+  overflow: visible !important;
+}
+
+.wish-image-container {
+  overflow: visible !important;
+  position: relative;
+}
+
+.icon-button-instance i {
+  color: #8A60C2 !important;
+  font-size: 20px !important; /* Розмір самої галочки */
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Зелений бейдж "Виконано" як на скриншоті */
+.done-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #BAE4C0 !important; /* Світло-зелений фон */
+  color: #358541 !important; /* Темно-зелений текст */
+  padding: 4px 12px;
+  border-radius: 8px 0 8px 0; /* Закруглення тільки внутрішніх кутів */
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+}
