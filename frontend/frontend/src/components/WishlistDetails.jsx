@@ -222,92 +222,89 @@ const toggleWishStatus = async (e, wishId) => {
           </div>
         </div>
 
-        {wishes.map((wish) => (
-          <div key={wish.id} className="wish-item-wrapper position-relative">
-            {/* Кнопка "Три крапки" */}
-            <div 
-              className="position-absolute top-0 end-0 m-2" 
-              style={{ zIndex: 20 }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setActiveMenuId(activeMenuId === wish.id ? null : wish.id);
-              }}
-            >
-              <button className="btn border-0 p-1 shadow-none bg-transparent">
-                <i className="bi bi-three-dots fs-4 text-dark"></i>
-              </button>
-
-              {activeMenuId === wish.id && (
-                <div 
-                  className="position-absolute shadow bg-white py-1" 
-                  style={{ top: '35px', right: '0', zIndex: 100, borderRadius: '10px', minWidth: '140px', border: '1px solid #eee' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button 
-                    className="dropdown-item py-2 px-3 small" 
-                    onClick={() => { setSelectedWish(wish); setIsEditWishModalOpen(true); }}
-                  >
-                    Редагувати
-                  </button>
-                  <button 
-                    className="dropdown-item py-2 px-3 small text-danger" 
-                    onClick={() => openDeleteModal(wish.id)}
-                  >
-                    Видалити
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* 2. ЗЕЛЕНА ПРИМІТКА "ВИКОНАНО" */}
-            {wish.isCompleted && (
-              <div className="completed-badge">
-                <i className="bi bi-check-lg me-1"></i> Виконано
-              </div>
-            )}
-
-{/* Картка бажання */}
-<Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
-  <div className="wish-item-card h-100">
-    <div className="wish-image-container position-relative">
-      {wish.imageUrl ? (
-        <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
-      ) : (
-        <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
-      )}
-      
-      {/* Пріоритет (лівий нижній кут) */}
-      <div className="priority-emoji">
-        <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
-      </div>
-
-      {/* Кнопка статусу (Галочка / Квітка) — ПРАВИЙ НИЖНІЙ КУТ */}
-<div 
-  className="icon-button-instance" 
-  onClick={(e) => toggleWishStatus(e, wish.id)}
->
-  {wish.isCompleted ? (
-    <i className="bi bi-flower1"></i>
-  ) : (
-    <i className="bi bi-check-lg"></i>
-  )}
-  
-  {/* Підказка, що з'являється знизу */}
-  <div className="custom-tooltip">
-    {wish.isCompleted ? "Повернути бажання в активний стан" : "Позначити бажання як виконане"}
-  </div>
-</div>
-    </div>
-    
-    <div className="wish-card-footer">
-      <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
-      <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
-    </div>
-  </div>
-</Link>
+{wishes.map((wish) => (
+  <div key={wish.id} className="wish-item-wrapper">
+    <Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
+      <div className="wish-item-card h-100 position-relative">
+        
+        {/* 1. БЕЙДЖ ТЕПЕР ВСЕРЕДИНІ КАРТКИ */}
+        {wish.isCompleted && (
+          <div className="completed-badge">
+            <i className="bi bi-check-lg me-1"></i> Виконано
           </div>
-        ))}
+        )}
+
+{/* ТРИ КРАПКИ — Всередині картки */}
+<div 
+  className="position-absolute top-0 end-0 m-2" 
+  style={{ zIndex: 40 }}
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveMenuId(activeMenuId === wish.id ? null : wish.id);
+  }}
+>
+  <button className="btn border-0 p-1 shadow-none bg-transparent">
+    <i className="bi bi-three-dots fs-4 text-dark"></i>
+  </button>
+
+  {activeMenuId === wish.id && (
+    <div className="dropdown-menu-custom">
+      <button 
+        className="dropdown-item" 
+        onClick={(e) => {
+          e.preventDefault(); // Додано: зупиняємо перехід за Link
+          e.stopPropagation(); // Додано: зупиняємо спливання до картки
+          setSelectedWish(wish); 
+          setIsEditWishModalOpen(true);
+          setActiveMenuId(null); // Закриваємо меню після кліку
+        }}
+      >
+        Редагувати
+      </button>
+      <button 
+        className="dropdown-item text-danger" 
+        onClick={(e) => {
+          e.preventDefault(); // Додано: зупиняємо перехід за Link
+          e.stopPropagation(); // Додано: зупиняємо спливання до картки
+          openDeleteModal(wish.id);
+          setActiveMenuId(null); // Закриваємо меню після кліку
+        }}
+      >
+        Видалити
+      </button>
+    </div>
+  )}
+</div>
+
+        {/* КОНТЕНТ КАРТКИ */}
+        <div className="wish-image-container">
+          {wish.imageUrl ? (
+            <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
+          ) : (
+            <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
+          )}
+          
+          <div className="priority-emoji">
+            <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
+          </div>
+
+          <div className="icon-button-instance" onClick={(e) => toggleWishStatus(e, wish.id)}>
+            {wish.isCompleted ? <i className="bi bi-flower1"></i> : <i className="bi bi-check-lg"></i>}
+            <div className="custom-tooltip">
+              {wish.isCompleted ? "Повернути бажання в активний стан" : "Позначити бажання як виконане"}
+            </div>
+          </div>
+        </div>
+        
+        <div className="wish-card-footer">
+          <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
+          <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
+        </div>
+      </div>
+    </Link>
+  </div>
+))}
       </div>
 
       {/* Модалки редагування */}
