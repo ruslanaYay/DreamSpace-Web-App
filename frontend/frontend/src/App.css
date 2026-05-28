@@ -622,6 +622,7 @@ body {
 
 
 /* Контейнер кнопки для коректного позиціонування підказки */
+/* Кнопка статусу */
 .icon-button-instance {
   position: absolute;
   right: 12px;
@@ -633,40 +634,50 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 20; /* Щоб бути поверх картинки */
+  cursor: pointer;
+  z-index: 20;
+  transition: transform 0.2s ease;
 }
 
-/* Стилізація самої підказки */
+/* Підказка, що виходить за межі внизу */
 .custom-tooltip {
   display: none;
   position: absolute;
-  /* Змінюємо позицію на низ */
-  top: 105%; 
-  right: 0;
+  top: 110%; /* З’являється під кнопкою */
+  right: -10px; /* Трішки висунута вбік */
   
-  background: white;
-  color: #333;
-  padding: 8px 12px;
+  background-color: #ffffff;
+  color: #333333;
+  padding: 8px 14px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
   
-  /* Ефект тіні та рамки як на скриншоті */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border: 1px solid #E0E0E0;
+  /* Тінь та рамка як на макеті */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
   
   z-index: 100;
   pointer-events: none;
 }
 
-/* Поява при наведенні на кнопку */
+/* Відображення при наведенні */
 .icon-button-instance:hover .custom-tooltip {
   display: block;
 }
 
-/* Щоб картка не обрізала підказку, яка виходить за межі */
-.wish-item-wrapper, .wish-item-card {
+/* КРИТИЧНО: дозволяємо підказці виходити за межі картки */
+.wish-item-card, 
+.wish-image-container, 
+.wish-item-wrapper {
   overflow: visible !important;
+}
+
+/* Стиль іконок */
+.icon-button-instance i {
+  color: #8A60C2;
+  font-size: 20px;
+  line-height: 1;
 }
 
 .wish-image-container {

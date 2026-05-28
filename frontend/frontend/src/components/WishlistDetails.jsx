@@ -135,27 +135,54 @@ const handleDeleteConfirm = async () => {
   if (loading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
   if (error) return <div className="text-center mt-5 text-danger"><h3>{error}</h3></div>;
 
-  // Додаємо функцію зміни статусу в WishlistDetails
-const toggleWishStatus = async (e, wishId, currentStatus) => {
+const toggleWishStatus = async (e, wishId) => {
   e.preventDefault();
   e.stopPropagation();
 
   const token = localStorage.getItem('token');
-  // Припускаємо, що статус змінюється через PATCH або PUT
+  const previousWishes = [...wishes];
+
+  // 1. Оптимістичне оновлення (для швидкості інтерфейсу)
+  setWishes(prev => prev.map(w => 
+    w.id === wishId ? { ...w, isCompleted: !w.isCompleted } : w
+  ));
+
   try {
-    const response = await fetch(`http://localhost:8085/api/wishes/${wishId}/toggle-status`, {
+    const response = await fetch(`http://localhost:8085/api/wishes/${wishId}/status`, {
       method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     });
 
     if (response.ok) {
-      // Оновлюємо стейт локально для миттєвого відображення
+      const updatedWish = await response.json();
+      
+      // Отримуємо значення, враховуючи можливий пробіл у ключі з бекенду
+      // (Перевіряємо обидва варіанти для надійності)
+      const completedStatus = updatedWish[" isCompleted "] !== undefined 
+        ? updatedWish[" isCompleted "] 
+        : updatedWish.isCompleted;
+
       setWishes(prev => prev.map(w => 
-        w.id === wishId ? { ...w, isCompleted: !w.isCompleted } : w
+        w.id === wishId ? { ...updatedWish, isCompleted: completedStatus } : w
       ));
+      return;
     }
+
+    // Якщо статус не 200 OK
+    const errorData = await response.json();
+    alert(errorData.message || "Помилка доступу");
+    setWishes(previousWishes);
+
   } catch (err) {
-    console.error("Помилка зміни статусу:", err);
+    console.error("Fetch error:", err);
+    // Якщо помилка не пов'язана з парсингом JSON, показуємо алерт
+    if (!err.message.includes("Unexpected token")) {
+      alert("Сталася неочікувана помилка");
+      setWishes(previousWishes);
+    }
   }
 };
   
