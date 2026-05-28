@@ -5,6 +5,8 @@ import com.dreamspace.api.enums.PrivacyStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import jakarta.persistence.Column;
+import java.util.UUID;
 
 @Entity
 @Table(name = "wishlist")
@@ -33,6 +35,9 @@ public class Wishlist {
 
     @Column(name = "created_at",  nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "share_token", unique = true, nullable = false, updatable = false)
+    private String shareToken = UUID.randomUUID().toString();
 
     @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Wish> wishes = new ArrayList<>();
@@ -103,6 +108,10 @@ public class Wishlist {
         this.createdAt = createdAt;
     }
 
+    public String getShareToken() { return shareToken; }
+
+    public void setShareToken(String shareToken) { this.shareToken = shareToken; }
+
     public List<Wish> getWishes() {
         return wishes;
     }
@@ -121,6 +130,7 @@ public class Wishlist {
                 ", privacyStatus=" + privacyStatus +
                 ", showBooked=" + showBooked +
                 ", createdAt=" + createdAt +
+                ", shareToken='" + shareToken + '\'' +
                 '}';
     }
 

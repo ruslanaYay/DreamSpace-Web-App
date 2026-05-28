@@ -17,5 +17,5 @@ public interface WishlistService {
     WishlistResponseDTO updateWishlist(Long id, WishlistUpdateRequestDTO dto, String currentUserEmail);
 
     void deleteWishlist(Long id, String currentUserEmail);
-
+    String getShareLink(Long id, String currentUserEmail);
 }

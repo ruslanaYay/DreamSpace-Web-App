@@ -83,4 +83,17 @@ public class WishlistController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    // отримання посилання на вішліст
+    @GetMapping("/{id}/share-link")
+    public ResponseEntity<java.util.Map<String, String>> getShareLink(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        String link = wishlistService.getShareLink(id, email);
+
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("shareLink", link);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

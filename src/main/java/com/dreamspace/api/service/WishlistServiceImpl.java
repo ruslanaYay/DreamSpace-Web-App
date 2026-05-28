@@ -194,4 +194,18 @@ public class WishlistServiceImpl implements WishlistService {
         wishlistRepository.delete(wishlist);
     }
 
+    @Override
+    public String getShareLink(Long id, String currentUserEmail) {
+        // перевірка існування вішліста
+        Wishlist wishlist = wishlistRepository.findById(id)
+                .orElseThrow(() -> new WishlistNotFoundException());
+        // перевірка права доступу
+        if (!wishlist.getUser().getEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException();
+        }
+        // повне посилання
+        String baseUrl = "https://dreamspace.com/wishlist/share/";
+        return baseUrl + wishlist.getShareToken();
+    }
+
 }
