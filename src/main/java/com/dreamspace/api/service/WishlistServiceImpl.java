@@ -1,10 +1,7 @@
 package com.dreamspace.api.service;
 
 
-import com.dreamspace.api.dto.WishlistDetailsDTO;
-import com.dreamspace.api.dto.WishlistRequestDTO; // Додали новий імпорт
-import com.dreamspace.api.dto.WishlistResponseDTO;
-import com.dreamspace.api.dto.WishlistUpdateRequestDTO; // Додали новий імпорт
+import com.dreamspace.api.dto.*;
 import com.dreamspace.api.entity.User;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.PrivacyStatus; // Додали для роботи з енумом приватності
@@ -14,6 +11,7 @@ import com.dreamspace.api.exception.WishlistNotFoundException;
 import com.dreamspace.api.repository.UserRepository;
 import com.dreamspace.api.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.dreamspace.api.repository.WishRepository;
@@ -35,21 +33,26 @@ public class WishlistServiceImpl implements WishlistService {
     private WishRepository wishRepository;
 
     @Override
-    public List<WishlistResponseDTO> getUserWishlists(String email, String query) {
+    public PageResponseDTO<WishlistResponseDTO> getUserWishlists(String email, String query, int page, int size) {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException());
+        //Якщо будуть некоректні значення
+        if (page < 0) {page = 0;}
+        if (size <= 0) {size = 11;}
+        if (size > 11) {size = 11;}
+        //об'єкт пагінації
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Wishlist> wishlistsPage;
 
-        List<Wishlist> wishlists = wishlistRepository.findAllByUser(user);
         if(query==null || query.isEmpty()) {
-            wishlists = wishlistRepository.findAllByUser(user);
+            wishlistsPage = wishlistRepository.findAllByUser(user, pageable);
         }
         else{
-            wishlists = wishlistRepository.findAllByUserAndNameContainingIgnoreCase(user, query.trim());
+            wishlistsPage = wishlistRepository.findAllByUserAndNameContainingIgnoreCase(user, query.trim(), pageable);
         }
 
-        return wishlists.stream()
-                .map(wishlist -> {
+        Page<WishlistResponseDTO> dtoPage = wishlistsPage.map(wishlist -> {
                     int itemCount = (int) wishRepository.countByWishlistId(wishlist.getId());
                     String coverImageUrl = wishRepository
                             .findFirstByWishlistIdAndImageUrlIsNotNullOrderByCreatedAtAsc(wishlist.getId())
@@ -66,8 +69,8 @@ public class WishlistServiceImpl implements WishlistService {
                             wishlist.getShowBooked() != null ? wishlist.getShowBooked() : false,
                             wishlist.getCreatedAt()
                     );
-                })
-                .toList();
+                });
+        return new PageResponseDTO<>(dtoPage);
     }
 
     @Override
