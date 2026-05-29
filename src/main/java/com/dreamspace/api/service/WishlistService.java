@@ -1,16 +1,13 @@
 package com.dreamspace.api.service;
 
-import com.dreamspace.api.dto.WishlistDetailsDTO;
-import com.dreamspace.api.dto.WishlistRequestDTO; // Додався новий імпорт
-import com.dreamspace.api.dto.WishlistResponseDTO;
-import com.dreamspace.api.dto.WishlistUpdateRequestDTO;
+import com.dreamspace.api.dto.*;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface WishlistService {
 
-    List<WishlistResponseDTO> getUserWishlists(String email, String query);
-
+    PageResponseDTO<WishlistResponseDTO> getUserWishlists(String email, String query, int page, int size);
 
     WishlistResponseDTO createWishlist(String email, WishlistRequestDTO dto);
     WishlistDetailsDTO getWishlistDetails(Long id, String email);

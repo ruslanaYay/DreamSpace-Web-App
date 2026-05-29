@@ -1,5 +1,6 @@
 package com.dreamspace.api.service;
 
+import com.dreamspace.api.dto.PageResponseDTO;
 import com.dreamspace.api.dto.WishRequestDTO;
 import com.dreamspace.api.dto.WishResponseDTO;
 import com.dreamspace.api.dto.WishUpdateRequestDTO;
@@ -13,6 +14,10 @@ import com.dreamspace.api.exception.WishNotFoundException;
 import com.dreamspace.api.repository.WishRepository;
 import com.dreamspace.api.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -73,28 +78,32 @@ public class WishServiceImpl implements WishService {
     }
 
     @Override
-    public List<WishResponseDTO> getWishlistWishes(Long wishlistId, String email){
+    public PageResponseDTO<WishResponseDTO> getWishlistWishes(Long wishlistId, String email, int page, int size){
         Wishlist wishlist = wishlistRepository.findById(wishlistId)
                 .orElseThrow(() -> new WishlistNotFoundException());
         boolean isOwner = wishlist.getUser().getEmail().equals(email);
         if (!isOwner && wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE) {
             throw new AccessDeniedException();
         }
-        List<Wish> wishes = wishRepository.findAllByWishlist_IdOrderByCreatedAtDesc(wishlistId);
-        return wishes.stream()
-                .map(wish -> new WishResponseDTO(
-                        wish.getId(),
-                        wish.getWishlist().getId(),
-                        wish.getName(),
-                        wish.getStoreLink(),
-                        wish.getPrice(),
-                        wish.getDescription(),
-                        wish.getImageUrl(),
-                        wish.getPriority(),
-                        wish.getCreatedAt(),
-                        wish.getIsCompleted()
-                ))
-                .toList();
+        if (page < 0) {page = 0;}
+        if (size <= 0) {size = 11;}
+        if (size > 11) {size = 11;}
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Wish> wishesPage = wishRepository.findAllByWishlist_Id(wishlistId, pageable);
+        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> new WishResponseDTO(
+                wish.getId(),
+                wish.getWishlist().getId(),
+                wish.getName(),
+                wish.getStoreLink(),
+                wish.getPrice(),
+                wish.getDescription(),
+                wish.getImageUrl(),
+                wish.getPriority(),
+                wish.getCreatedAt(),
+                wish.getIsCompleted()
+        ));
+        return new PageResponseDTO<>(dtoPage);
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.dreamspace.api.service.WishService;
 import com.dreamspace.api.service.WishlistService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,10 +30,12 @@ public class WishlistController {
     private WishService wishService;
 
     @GetMapping
-    public ResponseEntity<List<WishlistResponseDTO>> getWishlists(@RequestParam(required = false) String query) {
+    public ResponseEntity<PageResponseDTO<WishlistResponseDTO>> getWishlists(@RequestParam(required = false) String query,
+                                                                  @RequestParam(defaultValue = "0") int page,
+                                                                  @RequestParam(defaultValue = "11") int size) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<WishlistResponseDTO> myWishlists = wishlistService.getUserWishlists(email, query);
+        PageResponseDTO<WishlistResponseDTO> myWishlists = wishlistService.getUserWishlists(email, query, page, size);
 
         return new ResponseEntity<>(myWishlists, HttpStatus.OK);
     }
@@ -64,9 +67,11 @@ public class WishlistController {
 
     //отримання всіх бажань вішліста
     @GetMapping("/{wishlistId}/wishes")
-    public ResponseEntity<List<WishResponseDTO>> getWishlistWishes(@PathVariable Long wishlistId){
+    public ResponseEntity<PageResponseDTO<WishResponseDTO>> getWishlistWishes(@PathVariable Long wishlistId,
+                                                                              @RequestParam(defaultValue = "0") int page,
+                                                                              @RequestParam(defaultValue = "11") int size){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<WishResponseDTO> wishes = wishService.getWishlistWishes(wishlistId, email);
+        PageResponseDTO<WishResponseDTO> wishes = wishService.getWishlistWishes(wishlistId, email, page, size);
         return new ResponseEntity<>(wishes, HttpStatus.OK);
     }
 
