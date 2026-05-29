@@ -16,6 +16,7 @@ import { WishlistCreate } from './pages/WishlistCreate';
 import { WishlistDetails } from './components/WishlistDetails';
 import { WishItemCreate } from './components/WishItemCreate';
 import { WishItemDetails } from './components/WishItemDetails';
+import { Pagination } from './components/Pagination';
 
 // Компонент-обгортка для захисту маршруту
 const ProtectedAdminRoute = ({ children }) => {
@@ -154,6 +155,7 @@ const AppContent = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/wishlists" element={<Wishlists/>}/>
+            <Route path="/wishlists/page/:pageNumber" element={<Wishlists />} />
             <Route path="/wishlists/create" element={<WishlistCreate />} />
             <Route path="/wishlists/:id" element={<WishlistDetails />} />
             <Route path="/wishlists/:id/add-item" element={<WishItemCreate />} />

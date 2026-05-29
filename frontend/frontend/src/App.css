@@ -834,3 +834,37 @@ body {
         transform: translateY(-10px); 
     }
 }
+
+.custom-pagination .page-link {
+    background-color: transparent;
+    color: #4C4C4C; /* Темно-сірий текст */
+    font-weight: 500;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+}
+
+/* Стан активної сторінки */
+.custom-pagination .page-item.active .page-link {
+    background-color: #8A60C2  !important; /* Фіолетовий фон з макета */
+    color: white !important;
+}
+
+/* Стан при наведенні (hover) */
+.custom-pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+    background-color: #F0F0F0;
+    color: #8A60C2;
+}
+
+/* Стан неактивних стрілок */
+.custom-pagination .page-item.disabled .page-link {
+    color: #BDBDBD !important;
+    cursor: default;
+}
+
+/* Іконки стрілок */
+.custom-pagination .bi {
+    font-size: 16px;
+    vertical-align: middle;
+}

@@ -3,23 +3,25 @@ import React from 'react';
 export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const getPages = () => {
     const pages = [];
-    const maxVisiblePages = 5; // Скільки номерів сторінок показувати навколо поточної
 
-    if (totalPages <= 7) {
+    // 1. Якщо кількість сторінок не перевищує 5 — всі підряд
+    if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      if (currentPage > 3) pages.push('...');
-
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        if (!pages.includes(i)) pages.push(i);
+    } 
+    else {
+      // 2. Якщо сторінок більше 5
+      if (currentPage <= 3) {
+        // На одній із перших: < [1] 2 3 ... 7 >
+        pages.push(1, 2, 3, '...', totalPages);
+      } 
+      else if (currentPage > 3 && currentPage < totalPages - 2) {
+        // На одній із середніх: < 1 ... 3 [4] 5 ... 7 >
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      } 
+      else {
+        // На одній із останніх: < 1 ... 5 [6] 7 >
+        pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
       }
-
-      if (currentPage < totalPages - 2) pages.push('...');
-      pages.push(totalPages);
     }
     return pages;
   };
@@ -29,7 +31,10 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <ul className="pagination custom-pagination align-items-center gap-2">
         {/* Кнопка Назад */}
         <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-          <button className="page-link border-0 d-flex align-items-center gap-1" onClick={() => onPageChange(currentPage - 1)}>
+          <button 
+            className="page-link border-0 d-flex align-items-center gap-1" 
+            onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+          >
             <i className="bi bi-arrow-left"></i> Назад
           </button>
         </li>
@@ -49,7 +54,10 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
         {/* Кнопка Вперед */}
         <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-          <button className="page-link border-0 d-flex align-items-center gap-1" onClick={() => onPageChange(currentPage + 1)}>
+          <button 
+            className="page-link border-0 d-flex align-items-center gap-1" 
+            onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
+          >
             Вперед <i className="bi bi-arrow-right"></i>
           </button>
         </li>
