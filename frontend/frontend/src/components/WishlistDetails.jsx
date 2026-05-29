@@ -87,22 +87,55 @@ const handleDeleteConfirm = async () => {
   const [showToast, setShowToast] = useState(false);
 
 const handleShare = async () => {
+  const token = localStorage.getItem('token');
+
+  // Перевірка наявності токена перед запитом
+  if (!token) {
+    alert("Увійдіть в обліковий запис");
+    return;
+  }
+
   try {
-    // Формуємо повну URL-адресу на основі поточного домену та шляху
-    const shareUrl = window.location.href; 
+    const response = await fetch(`http://localhost:8085/api/wishlists/${id}/share-link`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    // Використовуємо Clipboard API для копіювання
-    await navigator.clipboard.writeText(shareUrl);
+    const data = await response.json();
 
-    // Активуємо сповіщення
-    setShowToast(true);
-
-    // Механізм автоматичного приховування через 3 секунди
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
+    if (response.ok) {
+      // Успішно (200 OK): Копіюємо отримане посилання в буфер обміну
+      await navigator.clipboard.writeText(data.shareLink);
+      
+      // Показуємо ваше кастомне сповіщення (576x64, колір #BAE4C0)
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      
+    } else {
+      // Обробка помилок згідно з ТЗ
+      switch (response.status) {
+        case 401:
+          alert(data.message || "Увійдіть в обліковий запис");
+          break;
+        case 403:
+          alert(data.message || "Доступ заборонено");
+          break;
+        case 404:
+          alert(data.message || "Вказаний вішліст не знайдено");
+          break;
+        case 500:
+          alert("Сталася неочікувана помилка");
+          break;
+        default:
+          alert(data.message || "Сталася помилка");
+      }
+    }
   } catch (err) {
-    console.error("Помилка копіювання:", err);
+    console.error("Помилка при отриманні посилання:", err);
+    alert("Не вдалося з'єднатися з сервером");
   }
 };
 // Завантаження даних при вході на сторінку
