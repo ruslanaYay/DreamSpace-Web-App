@@ -86,16 +86,25 @@ const handleDeleteConfirm = async () => {
 
   const [showToast, setShowToast] = useState(false);
 
-  const handleShare = () => {
-    // Копіюємо посилання на поточну сторінку в буфер обміну
-    navigator.clipboard.writeText(window.location.href);
-  
-    // Показуємо Toast
+const handleShare = async () => {
+  try {
+    // Формуємо повну URL-адресу на основі поточного домену та шляху
+    const shareUrl = window.location.href; 
+
+    // Використовуємо Clipboard API для копіювання
+    await navigator.clipboard.writeText(shareUrl);
+
+    // Активуємо сповіщення
     setShowToast(true);
-  
-    // Автоматично приховуємо через 3 секунди
-    setTimeout(() => setShowToast(false), 3000);
-  };
+
+    // Механізм автоматичного приховування через 3 секунди
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
+  } catch (err) {
+    console.error("Помилка копіювання:", err);
+  }
+};
 // Завантаження даних при вході на сторінку
   useEffect(() => {
     const fetchWishlistData = async () => {
@@ -231,6 +240,14 @@ const toggleWishStatus = async (e, wishId) => {
               <i className="bi bi-share-fill text-muted" style={{ fontSize: '14px' }}></i>
             </button>
           </div>
+          {/* Компонент сповіщення (Toast) */}
+          {showToast && (
+            <div className="toast-container-fixed">
+              <div className="custom-toast-v2 d-flex align-items-center justify-content-center shadow-sm">
+                <span className="toast-text">Посилання на вішліст скопійовано!</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       

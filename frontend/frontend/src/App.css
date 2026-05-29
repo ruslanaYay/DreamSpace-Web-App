@@ -787,3 +787,50 @@ body {
 .btn-wish-completed:hover {
     opacity: 0.85;
 }
+
+/* Контейнер для центрування */
+.toast-container-fixed {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2100;
+    pointer-events: none; /* Щоб не заважало клікам, якщо перекриває щось */
+}
+
+/* Сама плашка сповіщення */
+.custom-toast-v2 {
+    width: 576px;
+    height: 64px;
+    background-color: #BAE4C0 !important; /* Колір як у області "Виконано" */
+    border-radius: 12px; /* Радіус закруглення як у карток */
+    animation: toastFadeInOut 3s ease-in-out forwards;
+}
+
+/* Стиль тексту */
+.toast-text {
+    color: #358541 !important; /* Темно-зелений колір тексту */
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Raleway', sans-serif;
+}
+
+/* Анімація появи та плавного зникнення (fade-out) */
+@keyframes toastFadeInOut {
+    0% { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    15% { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+    85% { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: translateY(-10px); 
+    }
+}
