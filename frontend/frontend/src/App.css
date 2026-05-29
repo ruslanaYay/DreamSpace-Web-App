@@ -619,3 +619,218 @@ body {
     padding: 4px 10px;
     background: white;
 }
+
+/* Контейнер для меню (три крапки) */
+.dropdown-menu-custom {
+    position: absolute;
+    top: 35px; /* Дистанція від кнопки */
+    right: 0;
+    z-index: 100;
+    
+    background-color: #ffffff;
+    border-radius: 10px;
+    min-width: 140px;
+    padding: 4px 0;
+    
+    /* Тінь та рамка як у підказок */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #eee;
+}
+
+/* Елементи списку в меню */
+.dropdown-menu-custom .dropdown-item {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.dropdown-menu-custom .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-menu-custom .dropdown-item.text-danger {
+    color: #dc3545 !important;
+}
+
+/* Оновлюємо поведінку картки */
+.wish-item-card {
+    position: relative;
+    overflow: visible !important; /* КРИТИЧНО для меню та тултіпа */
+}
+
+/* Контейнер кнопки для коректного позиціонування підказки */
+/* Кнопка статусу */
+.icon-button-instance {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 36px;
+  height: 36px;
+  background-color: #ffffffd9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: transform 0.2s ease;
+}
+
+/* Підказка, що виходить за межі внизу */
+.custom-tooltip {
+  display: none;
+  position: absolute;
+  top: 110%; /* З’являється під кнопкою */
+  right: -10px; /* Трішки висунута вбік */
+  
+  background-color: #ffffff;
+  color: #333333;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+  
+  /* Тінь та рамка як на макеті */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Відображення при наведенні */
+.icon-button-instance:hover .custom-tooltip {
+  display: block;
+}
+
+/* КРИТИЧНО: дозволяємо підказці виходити за межі картки */
+.wish-item-card, 
+.wish-image-container, 
+.wish-item-wrapper {
+  overflow: visible !important;
+}
+
+/* Стиль іконок */
+.icon-button-instance i {
+  color: #8A60C2;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.wish-image-container {
+  overflow: visible !important;
+  position: relative;
+}
+
+.icon-button-instance i {
+  color: #8A60C2 !important;
+  font-size: 20px !important; /* Розмір самої галочки */
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Бейдж "Виконано" на куті картки */
+.completed-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #BAE4C0 !important;
+  color: #358541 !important;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  
+  /* Встановлюємо z-index вище за картку та зображення */
+  z-index: 25; 
+  
+  /* Лівий верхній кут бейджа має збігатися з кутом картки (12px), 
+     а правий нижній кут має своє закруглення */
+  border-radius: 12px 0 12px 0; 
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Щоб бейдж не заважав клікати на картку */
+}
+
+/* Галочка всередині бейджа */
+.completed-badge i {
+  font-size: 14px;
+  -webkit-text-stroke: 0.5px; /* Робимо галочку трішки чіткішою */
+}
+
+/* Кнопка в активному стані (Фіолетова) */
+.btn-wish-action {
+    background-color: #8A60C2 !important;
+    color: white !important;
+    transition: background-color 0.3s ease;
+}
+
+.btn-wish-action:hover {
+    background-color: #724bb7 !important;
+}
+
+/* Кнопка в стані "Виконано" (Світла) */
+.btn-wish-completed {
+    background-color: #E6DAF6 !important;
+    color: #8A60C2 !important;
+    transition: opacity 0.3s ease;
+}
+
+.btn-wish-completed:hover {
+    opacity: 0.85;
+}
+
+/* Контейнер для центрування */
+.toast-container-fixed {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2100;
+    pointer-events: none; /* Щоб не заважало клікам, якщо перекриває щось */
+}
+
+/* Сама плашка сповіщення */
+.custom-toast-v2 {
+    width: 576px;
+    height: 64px;
+    background-color: #BAE4C0 !important; /* Колір як у області "Виконано" */
+    border-radius: 12px; /* Радіус закруглення як у карток */
+    animation: toastFadeInOut 3s ease-in-out forwards;
+}
+
+/* Стиль тексту */
+.toast-text {
+    color: #358541 !important; /* Темно-зелений колір тексту */
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Raleway', sans-serif;
+}
+
+/* Анімація появи та плавного зникнення (fade-out) */
+@keyframes toastFadeInOut {
+    0% { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    15% { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+    85% { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: translateY(-10px); 
+    }
+}

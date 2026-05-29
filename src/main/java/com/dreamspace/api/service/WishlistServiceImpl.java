@@ -210,5 +210,26 @@ public class WishlistServiceImpl implements WishlistService {
         String baseUrl = "https://dreamspace.com/wishlist/share/";
         return baseUrl + wishlist.getShareToken();
     }
+    @Override
+    public WishlistResponseDTO getWishlistById(Long id) {
+        Wishlist wishlist = wishlistRepository.findById(id)
+                .orElseThrow(() -> new WishlistNotFoundException());
 
+        int itemCount = (int) wishRepository.countByWishlistId(wishlist.getId());
+        String coverImageUrl = wishRepository
+                .findFirstByWishlistIdAndImageUrlIsNotNullOrderByCreatedAtAsc(wishlist.getId())
+                .map(wish -> wish.getImageUrl())
+                .orElse(null);
+
+        return new WishlistResponseDTO(
+                wishlist.getId(),
+                wishlist.getName(),
+                wishlist.getDescription(),
+                itemCount,
+                coverImageUrl,
+                wishlist.getPrivacyStatus(),
+                wishlist.getShowBooked() != null ? wishlist.getShowBooked() : false,
+                wishlist.getCreatedAt()
+        );
+    }
 }

@@ -83,7 +83,29 @@ const handleDeleteConfirm = async () => {
   }
 };
 
-  // Завантаження даних при вході на сторінку
+
+  const [showToast, setShowToast] = useState(false);
+
+const handleShare = async () => {
+  try {
+    // Формуємо повну URL-адресу на основі поточного домену та шляху
+    const shareUrl = window.location.href; 
+
+    // Використовуємо Clipboard API для копіювання
+    await navigator.clipboard.writeText(shareUrl);
+
+    // Активуємо сповіщення
+    setShowToast(true);
+
+    // Механізм автоматичного приховування через 3 секунди
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
+  } catch (err) {
+    console.error("Помилка копіювання:", err);
+  }
+};
+// Завантаження даних при вході на сторінку
   useEffect(() => {
     const fetchWishlistData = async () => {
       const token = localStorage.getItem('token');
@@ -135,6 +157,57 @@ const handleDeleteConfirm = async () => {
   if (loading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
   if (error) return <div className="text-center mt-5 text-danger"><h3>{error}</h3></div>;
 
+const toggleWishStatus = async (e, wishId) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const token = localStorage.getItem('token');
+  const previousWishes = [...wishes];
+
+  // 1. Оптимістичне оновлення (для швидкості інтерфейсу)
+  setWishes(prev => prev.map(w => 
+    w.id === wishId ? { ...w, isCompleted: !w.isCompleted } : w
+  ));
+
+  try {
+    const response = await fetch(`http://localhost:8085/api/wishes/${wishId}/status`, {
+      method: 'PATCH',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const updatedWish = await response.json();
+      
+      // Отримуємо значення, враховуючи можливий пробіл у ключі з бекенду
+      // (Перевіряємо обидва варіанти для надійності)
+      const completedStatus = updatedWish[" isCompleted "] !== undefined 
+        ? updatedWish[" isCompleted "] 
+        : updatedWish.isCompleted;
+
+      setWishes(prev => prev.map(w => 
+        w.id === wishId ? { ...updatedWish, isCompleted: completedStatus } : w
+      ));
+      return;
+    }
+
+    // Якщо статус не 200 OK
+    const errorData = await response.json();
+    alert(errorData.message || "Помилка доступу");
+    setWishes(previousWishes);
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    // Якщо помилка не пов'язана з парсингом JSON, показуємо алерт
+    if (!err.message.includes("Unexpected token")) {
+      alert("Сталася неочікувана помилка");
+      setWishes(previousWishes);
+    }
+  }
+};
+  
   return (
     <div className="container-fluid p-4 min-vh-100" style={{ backgroundColor: '#F3F8FE' }}>
       
@@ -148,13 +221,33 @@ const handleDeleteConfirm = async () => {
           <h2 className="fw-bold mb-0 me-2 text-dark" style={{ fontFamily: 'Raleway, sans-serif' }}>
             {wishlist?.name}
           </h2>
-          <button 
-            className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
-            onClick={() => setIsEditListModalOpen(true)}
-            style={{ width: '32px', height: '32px', backgroundColor: '#F0F0F0', borderRadius: '8px' }}
-          >
-            <i className="bi bi-pencil-fill text-muted" style={{ fontSize: '14px' }}></i>
-          </button>
+          <div className="d-flex align-items-center gap-2">
+            {/* Кнопка редагування */}
+            <button 
+              className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
+              onClick={() => setIsEditListModalOpen(true)}
+              style={{ width: '32px', height: '32px', backgroundColor: '#F0F0F0', borderRadius: '8px' }}
+            >
+             <i className="bi bi-pencil-fill text-muted" style={{ fontSize: '14px' }}></i>
+            </button>
+
+            {/* Кнопка поділитися */}
+            <button 
+              className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
+              onClick={handleShare} // Функція для копіювання посилання
+              style={{ width: '32px', height: '32px', backgroundColor: '#F0F0F0', borderRadius: '8px' }}
+            >
+              <i className="bi bi-share-fill text-muted" style={{ fontSize: '14px' }}></i>
+            </button>
+          </div>
+          {/* Компонент сповіщення (Toast) */}
+          {showToast && (
+            <div className="toast-container-fixed">
+              <div className="custom-toast-v2 d-flex align-items-center justify-content-center shadow-sm">
+                <span className="toast-text">Посилання на вішліст скопійовано!</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -171,65 +264,89 @@ const handleDeleteConfirm = async () => {
           </div>
         </div>
 
-        {wishes.map((wish) => (
-          <div key={wish.id} className="wish-item-wrapper position-relative">
-            {/* Кнопка "Три крапки" */}
-            <div 
-              className="position-absolute top-0 end-0 m-2" 
-              style={{ zIndex: 20 }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setActiveMenuId(activeMenuId === wish.id ? null : wish.id);
-              }}
-            >
-              <button className="btn border-0 p-1 shadow-none bg-transparent">
-                <i className="bi bi-three-dots fs-4 text-dark"></i>
-              </button>
-
-              {activeMenuId === wish.id && (
-                <div 
-                  className="position-absolute shadow bg-white py-1" 
-                  style={{ top: '35px', right: '0', zIndex: 100, borderRadius: '10px', minWidth: '140px', border: '1px solid #eee' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button 
-                    className="dropdown-item py-2 px-3 small" 
-                    onClick={() => { setSelectedWish(wish); setIsEditWishModalOpen(true); }}
-                  >
-                    Редагувати
-                  </button>
-                  <button 
-                    className="dropdown-item py-2 px-3 small text-danger" 
-                    onClick={() => openDeleteModal(wish.id)}
-                  >
-                    Видалити
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Картка бажання */}
-            <Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
-              <div className="wish-item-card h-100">
-                <div className="wish-image-container">
-                  {wish.imageUrl ? (
-                    <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
-                  ) : (
-                    <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
-                  )}
-                  <div className="priority-emoji">
-                    <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
-                  </div>
-                </div>
-                <div className="wish-card-footer">
-                  <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
-                  <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
-                </div>
-              </div>
-            </Link>
+{wishes.map((wish) => (
+  <div key={wish.id} className="wish-item-wrapper">
+    <Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
+      <div className="wish-item-card h-100 position-relative">
+        
+        {/* 1. БЕЙДЖ ТЕПЕР ВСЕРЕДИНІ КАРТКИ */}
+        {wish.isCompleted && (
+          <div className="completed-badge">
+            <i className="bi bi-check-lg me-1"></i> Виконано
           </div>
-        ))}
+        )}
+
+{/* ТРИ КРАПКИ — Всередині картки */}
+<div 
+  className="position-absolute top-0 end-0 m-2" 
+  style={{ zIndex: 40 }}
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveMenuId(activeMenuId === wish.id ? null : wish.id);
+  }}
+>
+  <button className="btn border-0 p-1 shadow-none bg-transparent">
+    <i className="bi bi-three-dots fs-4 text-dark"></i>
+  </button>
+
+  {activeMenuId === wish.id && (
+    <div className="dropdown-menu-custom">
+      <button 
+        className="dropdown-item" 
+        onClick={(e) => {
+          e.preventDefault(); // Додано: зупиняємо перехід за Link
+          e.stopPropagation(); // Додано: зупиняємо спливання до картки
+          setSelectedWish(wish); 
+          setIsEditWishModalOpen(true);
+          setActiveMenuId(null); // Закриваємо меню після кліку
+        }}
+      >
+        Редагувати
+      </button>
+      <button 
+        className="dropdown-item text-danger" 
+        onClick={(e) => {
+          e.preventDefault(); // Додано: зупиняємо перехід за Link
+          e.stopPropagation(); // Додано: зупиняємо спливання до картки
+          openDeleteModal(wish.id);
+          setActiveMenuId(null); // Закриваємо меню після кліку
+        }}
+      >
+        Видалити
+      </button>
+    </div>
+  )}
+</div>
+
+        {/* КОНТЕНТ КАРТКИ */}
+        <div className="wish-image-container">
+          {wish.imageUrl ? (
+            <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
+          ) : (
+            <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
+          )}
+          
+          <div className="priority-emoji">
+            <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
+          </div>
+
+          <div className="icon-button-instance" onClick={(e) => toggleWishStatus(e, wish.id)}>
+            {wish.isCompleted ? <i className="bi bi-flower1"></i> : <i className="bi bi-check-lg"></i>}
+            <div className="custom-tooltip">
+              {wish.isCompleted ? "Повернути бажання в активний стан" : "Позначити бажання як виконане"}
+            </div>
+          </div>
+        </div>
+        
+        <div className="wish-card-footer">
+          <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
+          <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
+        </div>
+      </div>
+    </Link>
+  </div>
+))}
       </div>
 
       {/* Модалки редагування */}

@@ -153,6 +153,41 @@ const handleDeleteConfirm = async () => {
     }
   };
 
+  const toggleStatus = async () => {
+  const token = localStorage.getItem('token');
+  const previousStatus = item.isCompleted;
+
+  // Оптимістичне оновлення інтерфейсу
+  setItem(prev => ({ ...prev, isCompleted: !prev.isCompleted }));
+
+  try {
+    const response = await fetch(`http://localhost:8085/api/wishes/${itemId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Не вдалося змінити статус");
+    }
+    
+    const updatedWish = await response.json();
+    // Використовуємо дані з сервера (враховуючи можливі пробіли в ключах)
+    const completedStatus = updatedWish[" isCompleted "] !== undefined 
+      ? updatedWish[" isCompleted "] 
+      : updatedWish.isCompleted;
+
+    setItem(prev => ({ ...prev, isCompleted: completedStatus }));
+  } catch (err) {
+    console.error(err);
+    alert("Сталася помилка при оновленні статусу");
+    setItem(prev => ({ ...prev, isCompleted: previousStatus }));
+  }
+};
+  
+
 return (
     /* Хедер вже рендериться в App.jsx, тут тільки контент */
     <main className="flex-grow-1 position-relative" style={{ backgroundColor: '#F3F8FE', minHeight: 'calc(100vh - 82px)' }}>
@@ -204,9 +239,16 @@ return (
       <div className="container-fluid" style={{ paddingLeft: '80px', paddingTop: '60px' }}>
         <div className="d-flex flex-column flex-md-row gap-5 align-items-start">
           
-          {/* Блок зображення (436x470) */}
+          {/* Блок зображення — додаємо бейдж */}
           <div className="position-relative shadow-sm bg-white" 
-               style={{ width: '436px', height: '470px', flexShrink: 0 }}>
+            style={{ width: '436px', height: '470px', flexShrink: 0, overflow: 'hidden', borderRadius: '12px' }}>
+  
+          {/* БЕЙДЖ ВИКОНАНО (З'являється, якщо статус true) */}
+          {item.isCompleted && (
+            <div className="completed-badge" style={{ zIndex: 5 }}>
+              <i className="bi bi-check-lg me-1"></i> Виконано
+            </div>
+          )}
             {item.imageUrl ? (
               <img src={item.imageUrl} alt={item.name} className="w-100 h-100 object-fit-cover" />
             ) : (
@@ -262,6 +304,15 @@ return (
                 </div>
               </div>
             )}
+
+            {/* Кнопка "Виконати / Зробити активним" */}
+            <button 
+              className={`btn mt-2 w-100 d-flex align-items-center justify-content-center transition-all ${item.isCompleted ? 'btn-wish-completed' : 'btn-wish-action'}`}
+              style={{ height: '40px', borderRadius: '8px', fontWeight: '600', border: 'none' }}
+              onClick={toggleStatus}
+            >
+              {item.isCompleted ? 'Зробити активним' : 'Виконати'}
+            </button>
           </div>
         </div>
       </div>
