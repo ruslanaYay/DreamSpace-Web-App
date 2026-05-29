@@ -2,6 +2,8 @@ package com.dreamspace.api.repository;
 
 import com.dreamspace.api.entity.User;
 import com.dreamspace.api.entity.Wish;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,5 +18,5 @@ public interface WishRepository extends JpaRepository<Wish, Long> {
     // знаходить найперше бажання з картинкою у конкретному вішлісті
     Optional<Wish> findFirstByWishlistIdAndImageUrlIsNotNullOrderByCreatedAtAsc(Long wishlistId);
     //отримує бажання, пов'язані з вішлістом, і сортує їх
-    List<Wish> findAllByWishlist_IdOrderByCreatedAtDesc(Long wishlistId);
+    Page<Wish> findAllByWishlist_Id(Long wishlistId, Pageable pageable);
 }
