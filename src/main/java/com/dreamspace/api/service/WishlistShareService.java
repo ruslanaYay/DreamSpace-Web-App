@@ -1,7 +1,7 @@
 package com.dreamspace.api.service;
 
 import com.dreamspace.api.dto.SharedWishlistResponseDto;
-import com.dreamspace.api.dto.WishlistResponseDTO;
+import com.dreamspace.api.dto.WishlistDetailsDTO;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.PrivacyStatus;
 import com.dreamspace.api.exception.AccessDeniedException;
@@ -31,11 +31,13 @@ public class WishlistShareService {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean isOwner = false;
+        String currentUsername = null;
 
         if (authentication != null && authentication.isAuthenticated()
                 && !authentication.getName().equals("anonymousUser")) {
 
-            String currentUsername = authentication.getName();
+            currentUsername = authentication.getName();
+
             if (wishlist.getUser() != null && wishlist.getUser().getEmail().equals(currentUsername)) {
                 isOwner = true;
             }
@@ -47,7 +49,7 @@ public class WishlistShareService {
         }
 
 
-        WishlistResponseDTO baseDto = wishlistService.getWishlistById(wishlist.getId());
+        WishlistDetailsDTO baseDto = wishlistService.getWishlistDetails(wishlist.getId(), currentUsername);
 
         return new SharedWishlistResponseDto(baseDto, isOwner);
     }

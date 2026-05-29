@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 public record SharedWishlistResponseDto(
         @JsonUnwrapped
-        WishlistResponseDTO wishlist,
+        WishlistDetailsDTO wishlist,
 
         boolean isOwner
 ) {
