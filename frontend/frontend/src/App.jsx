@@ -76,6 +76,7 @@ const AppContent = () => {
     isAuthPage || 
     location.pathname.includes('/wish-items/') || 
     location.pathname.includes('/add-item') || 
+    location.pathname.includes('/wishlist/share/') || // ДОДАЙТЕ ЦЕЙ РЯДОК
     (location.pathname.startsWith('/wishlists/') && location.pathname !== '/wishlists');
 
   return (
@@ -158,6 +159,7 @@ const AppContent = () => {
             <Route path="/wishlists/page/:pageNumber" element={<Wishlists />} />
             <Route path="/wishlists/create" element={<WishlistCreate />} />
             <Route path="/wishlists/:id" element={<WishlistDetails />} />
+            <Route path="/wishlist/share/:shareToken" element={<WishlistDetails />} />
             <Route path="/wishlists/:id/add-item" element={<WishItemCreate />} />
             <Route path="/wish-items/:itemId" element={<WishItemDetails />} />
             <Route path="/booked" element={<div className="p-5">Сторінка Заброньованих</div>} />

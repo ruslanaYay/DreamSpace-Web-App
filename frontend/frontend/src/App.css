@@ -868,3 +868,44 @@ body {
     font-size: 16px;
     vertical-align: middle;
 }
+/* Контейнер повідомлення */
+.access-denied-container {
+  width: 576px;
+  height: 148px;
+  background: #FFFFFF;
+  border: 1px solid #E0E0E0; /* Легка рамка як на фото */
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Іконка заборони */
+.ban-icon {
+  width: 60px;
+  height: 60px;
+  color: #B3B3B3;
+}
+
+/* Текст повідомлення */
+.access-denied-text {
+  width: 450px;
+  height: 29px;
+  color: #4C4C4C;
+  font-family: 'Raleway', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0;
+}
+
+/* Центрування на сторінці */
+.error-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70vh; /* Щоб було по центру екрана */
+}
