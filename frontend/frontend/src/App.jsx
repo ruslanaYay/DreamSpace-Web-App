@@ -160,6 +160,7 @@ const AppContent = () => {
             <Route path="/wishlists/create" element={<WishlistCreate />} />
             <Route path="/wishlists/:id" element={<WishlistDetails />} />
             <Route path="/wishlist/share/:shareToken" element={<WishlistDetails />} />
+            <Route path="/wishlist/share/:shareToken/wish/:itemId" element={<WishItemDetails />}/>
             <Route path="/wishlists/:id/add-item" element={<WishItemCreate />} />
             <Route path="/wish-items/:itemId" element={<WishItemDetails />} />
             <Route path="/booked" element={<div className="p-5">Сторінка Заброньованих</div>} />
