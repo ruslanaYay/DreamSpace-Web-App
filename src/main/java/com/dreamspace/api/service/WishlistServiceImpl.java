@@ -207,7 +207,7 @@ public class WishlistServiceImpl implements WishlistService {
             throw new AccessDeniedException();
         }
         // повне посилання
-        String baseUrl = "https://dreamspace.com/wishlist/share/";
+        String baseUrl = "http://localhost:5173/wishlist/share/";
         return baseUrl + wishlist.getShareToken();
     }
     @Override
