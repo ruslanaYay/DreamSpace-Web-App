@@ -20,27 +20,31 @@ export const WishItemCreate = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    const fetchWishlists = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        const response = await fetch('http://localhost:8085/api/wishlists', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setWishlists(data);
-          // Якщо id не передано в URL, вибираємо перший вішліст зі списку
-          if (!id && data.length > 0) {
-            setFormData(prev => ({ ...prev, wishlistId: data[0].id }));
-          }
+useEffect(() => {
+  const fetchWishlists = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      // Додаємо size=100, щоб отримати всі вішлісти для випадаючого списку
+      const response = await fetch('http://localhost:8085/api/wishlists?size=100', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const lists = data.content || []; 
+        setWishlists(lists);
+        
+        // Якщо id не передано в URL, вибираємо перший вішліст зі списку
+        if (!id && lists.length > 0) {
+          setFormData(prev => ({ ...prev, wishlistId: lists[0].id }));
         }
-      } catch (err) {
-        console.error("Помилка завантаження вішлістів", err);
       }
-    };
-    fetchWishlists();
-  }, [id]);
+    } catch (err) {
+      console.error("Помилка завантаження вішлістів", err);
+    }
+  };
+  fetchWishlists();
+}, [id]);
 
   // Валідація полів форми перед відправкою
   const validate = () => {
