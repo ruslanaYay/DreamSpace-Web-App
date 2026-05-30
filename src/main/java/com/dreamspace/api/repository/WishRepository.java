@@ -19,4 +19,5 @@ public interface WishRepository extends JpaRepository<Wish, Long> {
     Optional<Wish> findFirstByWishlistIdAndImageUrlIsNotNullOrderByCreatedAtAsc(Long wishlistId);
     //отримує бажання, пов'язані з вішлістом, і сортує їх
     Page<Wish> findAllByWishlist_Id(Long wishlistId, Pageable pageable);
+    Optional<Wish> findByIdAndWishlist_ShareToken(Long id, String shareToken);
 }
