@@ -1,9 +1,6 @@
 package com.dreamspace.api.service;
 
-import com.dreamspace.api.dto.PageResponseDTO;
-import com.dreamspace.api.dto.SharedWishlistResponseDto;
-import com.dreamspace.api.dto.WishResponseDTO;
-import com.dreamspace.api.dto.WishlistDetailsDTO;
+import com.dreamspace.api.dto.*;
 import com.dreamspace.api.entity.Wish;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.PrivacyStatus;
@@ -101,7 +98,7 @@ public class WishlistShareService {
         ));
         return new PageResponseDTO<>(dtoPage);
     }
-    public WishResponseDTO getSharedWishDetails(String shareToken, Long id){
+    public SharedWishResponseDTO getSharedWishDetails(String shareToken, Long id){
         Wishlist wishlist = wishlistRepository.findByShareToken(shareToken)
                 .orElseThrow(() -> new WishlistNotFoundException());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -132,7 +129,7 @@ public class WishlistShareService {
         String finalDescription = (wish.getDescription() == null || wish.getDescription().trim().isEmpty())
                 ? null
                 : wish.getDescription();
-        return new WishResponseDTO(
+        WishResponseDTO dto=new WishResponseDTO(
                 wish.getId(),
                 wishlist.getId(),
                 wish.getName(),
@@ -144,5 +141,6 @@ public class WishlistShareService {
                 wish.getCreatedAt(),
                 wish.getIsCompleted()
         );
+        return new SharedWishResponseDTO(dto, isOwner);
     }
 }

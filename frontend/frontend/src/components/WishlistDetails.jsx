@@ -258,7 +258,9 @@ export const WishlistDetails = () => {
 
         {wishes.map((wish) => (
   <div key={wish.id} className="wish-item-wrapper">
-    <Link to={`/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
+    <Link to={shareToken
+          ? `/wishlist/share/${shareToken}/wish/${wish.id}`
+          : `/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
       <div className="wish-item-card h-100 position-relative">
         
         {/* Показуємо зелений бейдж "Виконано" зверху тільки якщо бажання виконане */}

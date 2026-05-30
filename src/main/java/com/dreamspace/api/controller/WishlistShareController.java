@@ -1,6 +1,7 @@
 package com.dreamspace.api.controller;
 
 import com.dreamspace.api.dto.PageResponseDTO;
+import com.dreamspace.api.dto.SharedWishResponseDTO;
 import com.dreamspace.api.dto.SharedWishlistResponseDto;
 import com.dreamspace.api.dto.WishResponseDTO;
 import com.dreamspace.api.service.WishlistShareService;
@@ -31,8 +32,8 @@ public class WishlistShareController {
         return ResponseEntity.ok(wishes);
     }
     @GetMapping("/share/{shareToken}/wishes/{id}")
-    public ResponseEntity<WishResponseDTO> getSharedWishDetails(@PathVariable String shareToken, @PathVariable Long id) {
-        WishResponseDTO response = wishlistShareService.getSharedWishDetails(shareToken, id);
+    public ResponseEntity<SharedWishResponseDTO> getSharedWishDetails(@PathVariable String shareToken, @PathVariable Long id) {
+        SharedWishResponseDTO response = wishlistShareService.getSharedWishDetails(shareToken, id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
