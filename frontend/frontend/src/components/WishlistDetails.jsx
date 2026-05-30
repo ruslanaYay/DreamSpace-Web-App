@@ -32,59 +32,91 @@ export const WishlistDetails = () => {
   const [showToast, setShowToast] = useState(false);
 
   // 1. Завантаження даних вішліста та його бажань з пагінацією
-const fetchWishlistData = async (page = 0) => {
-  const token = localStorage.getItem('token');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
+// 1. Завантаження даних вішліста та його бажань з пагінацією
+  const fetchWishlistData = async (page = 0) => {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+
+    try {
+      setLoading(true);
+      let wishlistUrl, wishesUrl;
+      
+      if (shareToken) {
+        wishlistUrl = `http://localhost:8085/api/wishlists/share/${shareToken}`;
+        wishesUrl = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes?page=${page}&size=${itemsPerPage}`;
+      } else {
+        wishlistUrl = `http://localhost:8085/api/wishlists/${id}`;
+        wishesUrl = `http://localhost:8085/api/wishlists/${id}/wishes?page=${page}&size=${itemsPerPage}&sort=id,desc`;
+      }
+
+      const [wishlistResponse, wishesResponse] = await Promise.all([
+        fetch(wishlistUrl, { method: 'GET', headers }),
+        fetch(wishesUrl, { method: 'GET', headers })
+      ]);
+
+      if (!wishlistResponse.ok) throw new Error('Вішліст не знайдено');
+      
+      const resData = await wishlistResponse.json();
+      const wishesPageData = await wishesResponse.json();
+
+      if (shareToken) {
+        const actualWishlist = resData.wishlist || resData;
+        setWishlist(actualWishlist);
+        setIsOwner(resData.isOwner === true);
+      } else {
+        setWishlist(resData);
+        setIsOwner(true);
+      }
+      
+      setWishes(wishesPageData.content || []);
+      setTotalPages(wishesPageData.totalPages || 0);
+      setTotalElements(wishesPageData.totalElements || 0);
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  try {
-    setLoading(true);
-    let wishlistUrl, wishesUrl;
-    
-    if (shareToken) {
-      wishlistUrl = `http://localhost:8085/api/wishlists/share/${shareToken}`;
-      wishesUrl = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes?page=${page}&size=${itemsPerPage}`;
-    } else {
-      wishlistUrl = `http://localhost:8085/api/wishlists/${id}`;
-      wishesUrl = `http://localhost:8085/api/wishlists/${id}/wishes?page=${page}&size=${itemsPerPage}&sort=id,desc`;
+  // 2. Функція поширення (БЕЗ ДУБЛЮВАННЯ НАЗВИ)
+  const handleShare = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("Увійдіть в обліковий запис");
+      return;
     }
 
-    const [wishlistResponse, wishesResponse] = await Promise.all([
-      fetch(wishlistUrl, { method: 'GET', headers }),
-      fetch(wishesUrl, { method: 'GET', headers })
-    ]);
+    const currentId = id || wishlist?.id;
+    if (!currentId) return;
 
-    if (!wishlistResponse.ok) throw new Error('Вішліст не знайдено');
-    
-    const resData = await wishlistResponse.json();
-    const wishesPageData = await wishesResponse.json();
+    try {
+      const response = await fetch(`http://localhost:8085/api/wishlists/${currentId}/share-link`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    console.log("Отримані дані:", resData); // ПЕРЕВІРТЕ КОНСОЛЬ ТУТ
-
-    if (shareToken) {
-      // Якщо в resData є поле 'wishlist', беремо його, якщо ні - беремо сам resData
-      const actualWishlist = resData.wishlist || resData;
-      setWishlist(actualWishlist);
-      
-      // Права власника: беремо з resData.isOwner (якщо бекенд його порахував)
-      setIsOwner(resData.isOwner === true);
-    } else {
-      setWishlist(resData);
-      setIsOwner(true);
+      if (response.ok) {
+        const data = await response.json();
+        await navigator.clipboard.writeText(data.shareLink);
+        
+        // Показуємо тост
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Помилка при отриманні посилання");
+      }
+    } catch (err) {
+      console.error("Помилка копіювання:", err);
     }
-    
-    setWishes(wishesPageData.content || []);
-    setTotalPages(wishesPageData.totalPages || 0);
-    setTotalElements(wishesPageData.totalElements || 0);
-
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchWishlistData(currentPage);
@@ -118,25 +150,6 @@ const fetchWishlistData = async (page = 0) => {
     } finally {
       setIsDeleting(false);
     }
-  };
-
-  const handleShare = async () => {
-    const currentId = id || wishlist?.id; // беремо або з URL, або з даних
-    if (!currentId) return;
-
-    const token = localStorage.getItem('token');
-    try {
-      const response = await fetch(`http://localhost:8085/api/wishlists/${id}/share-link`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (response.ok) {
-        await navigator.clipboard.writeText(data.shareLink);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      }
-    } catch (err) { console.error(err); }
   };
 
   const toggleWishStatus = async (e, wishId) => {
@@ -317,6 +330,15 @@ const fetchWishlistData = async (page = 0) => {
             totalPages={totalPages}
             onPageChange={(page) => setCurrentPage(page - 1)}
           />
+        </div>
+      )}
+
+      {/* --- ДОДАНИЙ БЛОК ПОВІДОМЛЕННЯ --- */}
+      {showToast && (
+        <div className="toast-container-fixed">
+          <div className="custom-toast-v2 d-flex align-items-center justify-content-center shadow-sm">
+            <span className="toast-text">Посилання на вішліст скопійовано!</span>
+          </div>
         </div>
       )}
 
