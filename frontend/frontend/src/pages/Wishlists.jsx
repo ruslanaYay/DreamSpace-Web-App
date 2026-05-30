@@ -14,24 +14,37 @@ export const Wishlists = () => {
   const [selectedWishlist, setSelectedWishlist] = useState(null);
 
   // --- СТАН ДЛЯ ПАГІНАЦІЇ ---
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0); // 0-індекс для API
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const itemsPerPage = 11;
 
-  const fetchWishlists = async (query = "") => {
+  // Функція запиту до API з підтримкою пагінації та пошуку
+  const fetchWishlists = async (query = "", page = 0) => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const url = query 
-        ? `http://localhost:8085/api/wishlists?query=${encodeURIComponent(query)}`
-        : 'http://localhost:8085/api/wishlists';
+      // Формуємо URL з обов'язковими параметрами
+      let url = `http://localhost:8085/api/wishlists?page=${page}&size=${itemsPerPage}`;
+      
+      if (query.trim() !== "") {
+        url += `&query=${encodeURIComponent(query)}`;
+      }
 
       const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+
       const data = await response.json();
+
       if (response.ok) {
-        setWishlists(data);
-        setCurrentPage(1); // Скидаємо на першу сторінку при новому запиті/пошуку
+        // Отримуємо дані з поля content
+        setWishlists(data.content || []);
+        setTotalPages(data.totalPages || 0);
+        setTotalElements(data.totalElements || 0);
       }
     } catch (err) {
       console.error("Помилка завантаження:", err);
@@ -40,30 +53,29 @@ export const Wishlists = () => {
     }
   };
 
+  // Слідкуємо за зміною сторінки
   useEffect(() => {
-    fetchWishlists();
-  }, []);
+    fetchWishlists(searchTerm, currentPage);
+  }, [currentPage]);
 
+  // Скидання на 0 сторінку при зміні пошукового запиту
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      fetchWishlists();
+      setCurrentPage(0);
+      fetchWishlists("", 0);
     }
   }, [searchTerm]);
 
-  // --- ЛОГІКА РОЗРАХУНКУ ПАГІНАЦІЇ ---
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = wishlists.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(wishlists.length / itemsPerPage);
-
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      fetchWishlists(searchTerm);
+      setCurrentPage(0);
+      fetchWishlists(searchTerm, 0);
     }
   };
 
   const handleSearchClick = () => {
-    fetchWishlists(searchTerm);
+    setCurrentPage(0);
+    fetchWishlists(searchTerm, 0);
   };
 
   const toggleMenu = (e, id) => {
@@ -92,24 +104,18 @@ export const Wishlists = () => {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-
       if (response.status === 204) {
-        setWishlists(prev => prev.filter(l => l.id !== selectedWishlist.id));
+        fetchWishlists(searchTerm, currentPage);
         setIsDeleteModalOpen(false);
-        setSelectedWishlist(null);
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || "Сталася помилка при видаленні");
       }
     } catch (err) {
       console.error("Помилка при видаленні:", err);
-      alert("Не вдалося з'єднатися з сервером");
     }
   };
 
   if (loading) return (
     <div className="text-center mt-5">
-      <div className="spinner-border text-primary"></div>
+      <div className="spinner-border text-primary" style={{ color: '#8A60C2' }}></div>
     </div>
   );
 
@@ -134,22 +140,22 @@ export const Wishlists = () => {
       </div>
 
       <div className="d-flex flex-wrap gap-5">
-        {/* КАРТКА СТВОРЕННЯ (тільки на 1-й сторінці і без пошуку) */}
-{searchTerm === "" && (
-    <div className="wishlist-item-wrapper">
-      <Link to="/wishlists/create" className="text-decoration-none">
-        <div className="wishlist-card add-card d-flex align-items-center justify-content-center shadow-sm">
-          <div className="plus-icon">
-            <i className="bi bi-plus-lg text-white fs-2"></i>
+        {/* КАРТКА СТВОРЕННЯ (Залишається без змін, відображається завжди без пошуку) */}
+        {searchTerm === "" && (
+          <div className="wishlist-item-wrapper">
+            <Link to="/wishlists/create" className="text-decoration-none">
+              <div className="wishlist-card add-card d-flex align-items-center justify-content-center shadow-sm">
+                <div className="plus-icon">
+                  <i className="bi bi-plus-lg text-white fs-2"></i>
+                </div>
+              </div>
+            </Link>
           </div>
-        </div>
-      </Link>
-    </div>
-  )}
+        )}
 
-        {/* СПИСОК ВІШЛІСТІВ (відфільтрованих пагінацією) */}
-        {currentItems.length > 0 ? (
-          currentItems.map((list) => (
+        {/* СПИСОК ВІШЛІСТІВ */}
+        {wishlists.length > 0 ? (
+          wishlists.map((list) => (
             <div key={list.id} className="wishlist-item-wrapper position-relative">
               <Link to={`/wishlists/${list.id}`} className="text-decoration-none">
                 <div className="wishlist-card shadow-sm position-relative">
@@ -190,7 +196,7 @@ export const Wishlists = () => {
         ) : (
           searchTerm !== "" && (
             <div className="w-100 mt-4">
-              <h3 className="fw-medium text-dark" style={{ fontSize: '1.8rem', opacity: 0.8, color: '#4C4C4C' }}>
+              <h3 className="fw-medium text-dark" style={{ fontSize: '1.8rem', opacity: 0.8 }}>
                 Вішлістів із такою назвою не знайдено
               </h3>
             </div>
@@ -198,19 +204,18 @@ export const Wishlists = () => {
         )}
       </div>
 
-      {/* --- ВІДОБРАЖЕННЯ ПАГІНАЦІЇ --- */}
-      {/* Показуємо тільки якщо елементів більше 11 */}
-      {wishlists.length > itemsPerPage && (
+      {/* ПАГІНАЦІЯ */}
+      {totalElements > itemsPerPage && (
         <div className="d-flex justify-content-center mt-5">
           <Pagination 
-            currentPage={currentPage}
+            currentPage={currentPage + 1} // Для UI
             totalPages={totalPages}
-            onPageChange={(page) => setCurrentPage(page)}
+            onPageChange={(page) => setCurrentPage(page - 1)} // Для API
           />
         </div>
       )}
 
-      {/* МОДАЛКИ (БЕЗ ЗМІН) */}
+      {/* МОДАЛКИ */}
       {isDeleteModalOpen && (
         <div className="modal-backdrop d-flex align-items-center justify-content-center" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1050 }}>
           <div className="bg-white p-4 shadow-lg text-center" style={{ width: '420px', borderRadius: '24px', position: 'relative' }}>
