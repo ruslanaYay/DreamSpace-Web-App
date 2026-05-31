@@ -39,8 +39,8 @@ public class WishlistServiceImpl implements WishlistService {
                 .orElseThrow(() -> new UserNotFoundException());
         //Якщо будуть некоректні значення
         if (page < 0) {page = 0;}
-        if (size <= 0) {size = 11;}
-        if (size > 11) {size = 11;}
+        if (size <= 0) {size = 12;}
+        if (size > 12) {size = 12;}
         //об'єкт пагінації
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Wishlist> wishlistsPage;

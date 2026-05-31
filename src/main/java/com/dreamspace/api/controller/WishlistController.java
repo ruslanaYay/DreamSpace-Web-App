@@ -32,7 +32,7 @@ public class WishlistController {
     @GetMapping
     public ResponseEntity<PageResponseDTO<WishlistResponseDTO>> getWishlists(@RequestParam(required = false) String query,
                                                                   @RequestParam(defaultValue = "0") int page,
-                                                                  @RequestParam(defaultValue = "11") int size) {
+                                                                  @RequestParam(defaultValue = "12") int size) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         PageResponseDTO<WishlistResponseDTO> myWishlists = wishlistService.getUserWishlists(email, query, page, size);
@@ -69,7 +69,7 @@ public class WishlistController {
     @GetMapping("/{wishlistId}/wishes")
     public ResponseEntity<PageResponseDTO<WishResponseDTO>> getWishlistWishes(@PathVariable Long wishlistId,
                                                                               @RequestParam(defaultValue = "0") int page,
-                                                                              @RequestParam(defaultValue = "11") int size){
+                                                                              @RequestParam(defaultValue = "15") int size){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         PageResponseDTO<WishResponseDTO> wishes = wishService.getWishlistWishes(wishlistId, email, page, size);
         return new ResponseEntity<>(wishes, HttpStatus.OK);
