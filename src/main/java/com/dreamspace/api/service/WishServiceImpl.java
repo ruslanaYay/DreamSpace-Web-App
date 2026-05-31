@@ -86,8 +86,8 @@ public class WishServiceImpl implements WishService {
             throw new AccessDeniedException();
         }
         if (page < 0) {page = 0;}
-        if (size <= 0) {size = 11;}
-        if (size > 11) {size = 11;}
+        if (size <= 0) {size = 15;}
+        if (size > 15) {size = 15;}
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Wish> wishesPage = wishRepository.findAllByWishlist_Id(wishlistId, pageable);

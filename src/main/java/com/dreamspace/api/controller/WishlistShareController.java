@@ -27,7 +27,7 @@ public class WishlistShareController {
     @GetMapping("/share/{shareToken}/wishes")
     public ResponseEntity<PageResponseDTO<WishResponseDTO>> getSharedWishlistWishes(@PathVariable String shareToken,
                                                                                     @RequestParam(defaultValue = "0") int page,
-                                                                                    @RequestParam(defaultValue = "11") int size) {
+                                                                                    @RequestParam(defaultValue = "15") int size) {
         PageResponseDTO<WishResponseDTO> wishes = wishlistShareService.getSharedWishlistWishes(shareToken, page, size);
         return ResponseEntity.ok(wishes);
     }
