@@ -42,6 +42,9 @@ public class Wish {
     @Column(name = "is_completed", nullable = false)
     private boolean isCompleted = false;
 
+    @OneToOne(mappedBy = "wish", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private Reservation reservation;
+
     public Wish() {}
 
     public Wish(Wishlist wishlist, String name, String storeLink, BigDecimal price,
@@ -134,6 +137,9 @@ public class Wish {
     public void setCompleted(boolean completed) {
         this.isCompleted = completed;
     }
+
+    public Reservation getReservation() { return reservation; }
+    public void setReservation(Reservation reservation) { this.reservation = reservation; }
 
     @Override
     public String toString() {

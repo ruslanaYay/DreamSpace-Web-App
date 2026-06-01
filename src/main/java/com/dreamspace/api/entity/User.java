@@ -3,6 +3,7 @@ package com.dreamspace.api.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name="user")
@@ -36,6 +37,13 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Wishlist> wishlists;
+
+    @OneToMany(mappedBy = "initiator", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reservation> initiatedReservations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReservationParticipant> participations = new ArrayList<>();
+
 
     public User(Long id, Role role, String firstName, String lastName, String email, String password) {
         this.id = id;
@@ -113,6 +121,18 @@ public class User {
 
     public void setWishlists(List<Wishlist> wishlists) {
         this.wishlists = wishlists;
+    }
+
+    public List<Reservation> getInitiatedReservations() { return initiatedReservations; }
+
+    public void setInitiatedReservations(List<Reservation> initiatedReservations) {
+        this.initiatedReservations = initiatedReservations;
+    }
+
+    public List<ReservationParticipant> getParticipations() { return participations; }
+
+    public void setParticipations(List<ReservationParticipant> participations) {
+        this.participations = participations;
     }
 
     @Override
