@@ -17,15 +17,19 @@ export const Wishlists = () => {
   const [currentPage, setCurrentPage] = useState(0); // 0-індекс для API
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const itemsPerPage = 11;
+  // Динамічний розрахунок ліміту елементів для UI відображення пагінації
+  const itemsPerPage = (currentPage === 0 && searchTerm === "") ? 11 : 12;
 
   // Функція запиту до API з підтримкою пагінації та пошуку
   const fetchWishlists = async (query = "", page = 0) => {
     setLoading(true);
     const token = localStorage.getItem('token');
+    // ЛОГІКА СІТКИ: якщо перша сторінка і немає пошуку (є плюс) -> беремо 11, інакше -> 12
+    const currentSize = (page === 0 && query.trim() === "") ? 11 : 12;
+
     try {
       // Формуємо URL з обов'язковими параметрами
-      let url = `http://localhost:8085/api/wishlists?page=${page}&size=${itemsPerPage}`;
+      let url = `http://localhost:8085/api/wishlists?page=${page}&size=${currentSize}`;
       
       if (query.trim() !== "") {
         url += `&query=${encodeURIComponent(query)}`;
@@ -141,7 +145,7 @@ export const Wishlists = () => {
 
       <div className="d-flex flex-wrap gap-5">
         {/* КАРТКА СТВОРЕННЯ (Залишається без змін, відображається завжди без пошуку) */}
-        {searchTerm === "" && (
+        {searchTerm === "" && currentPage === 0 && (
           <div className="wishlist-item-wrapper">
             <Link to="/wishlists/create" className="text-decoration-none">
               <div className="wishlist-card add-card d-flex align-items-center justify-content-center shadow-sm">
@@ -151,7 +155,7 @@ export const Wishlists = () => {
               </div>
             </Link>
           </div>
-        )}
+        )}  
 
         {/* СПИСОК ВІШЛІСТІВ */}
         {wishlists.length > 0 ? (
@@ -204,8 +208,8 @@ export const Wishlists = () => {
         )}
       </div>
 
-      {/* ПАГІНАЦІЯ */}
-      {totalElements > itemsPerPage && (
+      {/* ПАГІНАЦІЯ (Показуємо, якщо загальна кількість сторінок більша за 1) */}
+      {totalPages > 1 && (
         <div className="d-flex justify-content-center mt-5">
           <Pagination 
             currentPage={currentPage + 1} // Для UI
@@ -214,7 +218,6 @@ export const Wishlists = () => {
           />
         </div>
       )}
-
       {/* МОДАЛКИ */}
       {isDeleteModalOpen && (
         <div className="modal-backdrop d-flex align-items-center justify-content-center" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1050 }}>

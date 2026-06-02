@@ -717,9 +717,12 @@ body {
 
 /* Стиль іконок */
 .icon-button-instance i {
-  color: #8A60C2;
-  font-size: 20px;
+  color: #8A60C2 !important;
+  font-size: 20px !important;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wish-image-container {
@@ -727,13 +730,28 @@ body {
   position: relative;
 }
 
-.icon-button-instance i {
-  color: #8A60C2 !important;
-  font-size: 20px !important; /* Розмір самої галочки */
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Переконуємося, що SVG квіточка має правильний колір та розмір */
+.icon-button-instance svg.completed-flower {
+  stroke: #8A60C2 !important;
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+}
+
+/* Ефект збільшення квіточки при наведенні (опціонально) */
+.icon-button-instance:hover svg.completed-flower {
+  transform: scale(1.05);
+}
+
+/* Маленька біла стрілочка-покажчик зверху вашої підказки .custom-tooltip */
+.custom-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  right: 20px; /* Вирівнювання стрілочки рівно під круглою білою кнопкою */
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #ffffff transparent;
 }
 
 /* Бейдж "Виконано" на куті картки */
@@ -760,6 +778,11 @@ body {
   pointer-events: none; /* Щоб бейдж не заважав клікати на картку */
 }
 
+/* Модифікатор для бейджа "Заброньовано" */
+.completed-badge.reserved {
+  background-color: #BDD0FF !important;
+  color: #3B579E !important;
+}
 /* Галочка всередині бейджа */
 .completed-badge i {
   font-size: 14px;
