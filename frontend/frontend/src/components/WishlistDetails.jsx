@@ -33,6 +33,7 @@ export const WishlistDetails = () => {
   // Нові стани для модального вікна бронювання
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [reserveWishId, setReserveWishId] = useState(null);
+  const [isReserving, setIsReserving] = useState(false); // Стан loading для кнопки «Підтвердити»
 
   // 1. Завантаження даних вішліста та його бажань з пагінацією
   const fetchWishlistData = async (page = 0) => {
@@ -191,18 +192,64 @@ export const WishlistDetails = () => {
   const handleReserveClick = (e, wishId) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Перевірка авторизації користувача
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     setReserveWishId(wishId);
     setShowReserveModal(true);
   };
 
-  const handleConfirmReservation = () => {
-    setWishes(prevWishes => 
-      prevWishes.map(wish => 
-        wish.id === reserveWishId ? { ...wish, isReserved: true } : wish
-      )
-    );
-    setShowReserveModal(false);
-    setReserveWishId(null);
+  const handleConfirmReservation = async () => {
+    if (!reserveWishId || isReserving) return;
+    
+    setIsReserving(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      const response = await fetch(`http://localhost:8085/api/wishlists/share/${shareToken}/wishes/${reserveWishId}/reserve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          reservationType: "INDIVIDUAL",
+          maxParticipants: 1,
+          email: null
+        })
+      });
+
+      const resData = await response.json();
+
+      if (response.ok) {
+        // Оновлюємо стан обраного бажання локально на основі отриманої відповіді від бекенду
+        setWishes(prevWishes => 
+          prevWishes.map(wish => 
+            wish.id === reserveWishId ? { ...wish, isReserved: true, reservationType: "INDIVIDUAL" } : wish
+          )
+        );
+        setShowReserveModal(false);
+        setReserveWishId(null);
+      } else {
+        // Обробка помилок відповідно до специфікації API
+        alert(resData.message || "Помилка при бронюванні бажання");
+        if (response.status === 410 || response.status === 404 || response.status === 400) {
+          fetchWishlistData(currentPage); // Перезавантажуємо актуальний стан позицій
+        }
+        setShowReserveModal(false);
+        setReserveWishId(null);
+      }
+    } catch (err) {
+      console.error("Помилка при бронюванні бажання:", err);
+      alert("Не вдалося з'єднатися з сервером");
+    } finally {
+      setIsReserving(false);
+    }
   };
 
   if (loading && !wishlist) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
@@ -279,132 +326,140 @@ export const WishlistDetails = () => {
           </div>
         )}
 
-        {wishes.map((wish) => (
-          <div key={wish.id} className="wish-item-wrapper">
-            <Link to={shareToken
-                  ? `/wishlist/share/${shareToken}/wish/${wish.id}`
-                  : `/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
-              <div className="wish-item-card h-100 position-relative">
-                
-                {/* Бейдж: Виконано */}
-                {wish.isCompleted && (
-                  <div className="completed-badge">
-                    <i className="bi bi-check-lg me-1"></i> Виконано
-                  </div>
-                )}
+        {wishes.map((wish) => {
+          // Якщо бекенд не дає isReserved на роуті власника, 
+          // перевіряємо наявність заповненого reservationType або reservationId
+          const isWishReserved = wish.isReserved === true || !!wish.reservationType || !!wish.reservationId;
 
-                {/* Нове відображення бейджа «Заброньовано» на місці «Виконано» */}
-                {!wish.isCompleted && wish.isReserved && (
-                  <div className="completed-badge reserved">
-                    <i className="bi bi-lock-fill me-1"></i> Заброньовано
-                  </div>
-                )}
+          return (
+            <div key={wish.id} className="wish-item-wrapper">
+              <Link to={shareToken
+                    ? `/wishlist/share/${shareToken}/wish/${wish.id}`
+                    : `/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
+                <div className="wish-item-card h-100 position-relative">
+                  
+                  {/* Бейдж: Виконано */}
+                  {wish.isCompleted && (
+                    <div className="completed-badge" style={{ zIndex: 45 }}>
+                      <i className="bi bi-check-lg me-1"></i> Виконано
+                    </div>
+                  )}
 
-                {isOwner && (
-                  <div className="position-absolute top-0 end-0 m-2" style={{ zIndex: 40 }}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveMenuId(activeMenuId === wish.id ? null : wish.id); }}>
-                    <button className="btn border-0 p-1 shadow-none bg-transparent">
-                      <i className="bi bi-three-dots fs-4 text-dark"></i>
-                    </button>
-                    {activeMenuId === wish.id && (
-                       <div className="position-absolute shadow bg-white" style={{ top: '40px', right: '0px', zIndex: 110, borderRadius: '12px', minWidth: '160px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
-                          <div className="d-flex flex-column text-start">
-                            <div className="px-3 py-2 text-dark menu-hover-effect" 
-                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedWish(wish); setIsEditWishModalOpen(true); setActiveMenuId(null); }} 
-                                 style={{ cursor: 'pointer', fontSize: '14px' }}>
-                              Редагувати
+                  {/* Відображення бейджа «Заброньовано» на основі комбінованої перевірки */}
+                  {!wish.isCompleted && isWishReserved && (
+                    <div className="completed-badge reserved" style={{ zIndex: 45 }}>
+                      <i className="bi bi-lock-fill me-1"></i> Заброньовано
+                    </div>
+                  )}
+
+                  {isOwner && (
+                    <div className="position-absolute top-0 end-0 m-2" style={{ zIndex: 50 }}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveMenuId(activeMenuId === wish.id ? null : wish.id); }}>
+                      <button className="btn border-0 p-1 shadow-none bg-transparent">
+                        <i className="bi bi-three-dots fs-4 text-dark"></i>
+                      </button>
+                      {activeMenuId === wish.id && (
+                         <div className="position-absolute shadow bg-white" style={{ top: '40px', right: '0px', zIndex: 110, borderRadius: '12px', minWidth: '160px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
+                            <div className="d-flex flex-column text-start">
+                              <div className="px-3 py-2 text-dark menu-hover-effect" 
+                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedWish(wish); setIsEditWishModalOpen(true); setActiveMenuId(null); }} 
+                                   style={{ cursor: 'pointer', fontSize: '14px' }}>
+                                Редагувати
+                              </div>
+                              <div style={{ height: '1px', backgroundColor: '#eee', margin: '0 10px' }}></div>
+                              <div className="px-3 py-2 text-dark menu-hover-effect" 
+                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDeleteModal(wish.id); setActiveMenuId(null); }} 
+                                   style={{ cursor: 'pointer', fontSize: '14px' }}>
+                                Видалити
+                              </div>
                             </div>
-                            <div style={{ height: '1px', backgroundColor: '#eee', margin: '0 10px' }}></div>
-                            <div className="px-3 py-2 text-dark menu-hover-effect" 
-                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDeleteModal(wish.id); setActiveMenuId(null); }} 
-                                 style={{ cursor: 'pointer', fontSize: '14px' }}>
-                              Видалити
-                            </div>
-                          </div>
-                       </div>
+                         </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="wish-image-container" style={{ position: 'relative', overflow: 'hidden' }}>
+                    {wish.imageUrl ? (
+                      <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
+                    ) : (
+                      <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
+                    )}
+                    
+                    <div className="priority-emoji">
+                      <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
+                    </div>
+
+                    {isOwner ? (
+                      <div 
+                        className={`icon-button-instance ${wish.isCompleted ? 'is-completed' : ''}`}
+                        onClick={(e) => toggleWishStatus(e, wish.id)} 
+                        style={{ zIndex: 40 }}
+                      >
+                        {wish.isCompleted ? (
+                          <svg 
+                            width="20" 
+                            height="20" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="#8A60C2" 
+                            strokeWidth="2.8" 
+                            strokeLinecap="round"
+                            className="completed-flower"
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <line x1="12" y1="5" x2="12" y2="2" />
+                            <line x1="12" y1="22" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="2" y2="12" />
+                            <line x1="22" y1="12" x2="19" y2="12" />
+                            <line x1="17" y1="17" x2="19.1" y2="19.1" />
+                            <line x1="4.9" y1="4.9" x2="7" y2="7" />
+                            <line x1="17" y1="7" x2="19.1" y2="4.9" />
+                            <line x1="4.9" y1="19.1" x2="7" y2="17" />
+                          </svg>
+                        ) : (
+                          <i className="bi bi-check-lg"></i>
+                        )}
+
+                        <div className="custom-tooltip">
+                          {wish.isCompleted ? "Повернути бажання в активний стан" : "Позначити бажання як виконане"}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Для гостей: Показувати кнопку тільки якщо не заброньовано і не виконано */
+                      !wish.isCompleted && !isWishReserved && (
+                        <button
+                          className="btn d-flex align-items-center justify-content-center text-white"
+                          style={{ 
+                            width: '127px', 
+                            height: '32px', 
+                            borderRadius: '8px', 
+                            fontWeight: '500', 
+                            fontSize: '14px',
+                            border: '1px solid #8A60C2', 
+                            backgroundColor: 'rgba(106, 69, 156, 0.52)', 
+                            position: 'absolute', 
+                            bottom: '12px', 
+                            right: '12px', 
+                            zIndex: 10,
+                            padding: '0'
+                        }}
+                          onClick={(e) => handleReserveClick(e, wish.id)}
+                        >
+                          Забронювати
+                        </button>
+                      )
                     )}
                   </div>
-                )}
-
-                <div className="wish-image-container" style={{ position: 'relative', overflow: 'hidden' }}>
-                  {wish.imageUrl ? (
-                    <img src={wish.imageUrl} alt={wish.name} className="wish-main-img" />
-                  ) : (
-                    <div className="image-placeholder"><i className="bi bi-image fs-1 opacity-25"></i></div>
-                  )}
                   
-                  <div className="priority-emoji">
-                    <i className={`bi ${getPriorityIcon(wish.priority)}`}></i>
+                  <div className="wish-card-footer">
+                    <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
+                    <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
                   </div>
-
-                  {isOwner ? (
-                    <div 
-                      className={`icon-button-instance ${wish.isCompleted ? 'is-completed' : ''}`}
-                      onClick={(e) => toggleWishStatus(e, wish.id)} 
-                    >
-                      {wish.isCompleted ? (
-                        <svg 
-                          width="20" 
-                          height="20" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="#8A60C2" 
-                          strokeWidth="2.8" 
-                          strokeLinecap="round"
-                          className="completed-flower"
-                          style={{ display: 'flex', alignItems: 'center', justifycontent: 'center' }}
-                        >
-                          <line x1="12" y1="5" x2="12" y2="2" />
-                          <line x1="12" y1="22" x2="12" y2="19" />
-                          <line x1="5" y1="12" x2="2" y2="12" />
-                          <line x1="22" y1="12" x2="19" y2="12" />
-                          <line x1="17" y1="17" x2="19.1" y2="19.1" />
-                          <line x1="4.9" y1="4.9" x2="7" y2="7" />
-                          <line x1="17" y1="7" x2="19.1" y2="4.9" />
-                          <line x1="4.9" y1="19.1" x2="7" y2="17" />
-                        </svg>
-                      ) : (
-                        <i className="bi bi-check-lg"></i>
-                      )}
-
-                      <div className="custom-tooltip">
-                        {wish.isCompleted ? "Повернути бажання в активний стан" : "Позначити бажання як виконане"}
-                      </div>
-                    </div>
-                  ) : (
-                    !wish.isCompleted && !wish.isReserved && (
-                      <button
-                        className="btn d-flex align-items-center justify-content-center text-white"
-                        style={{ 
-                          width: '127px', 
-                          height: '32px', 
-                          borderRadius: '8px', 
-                          fontWeight: '500', 
-                          fontSize: '14px',
-                          border: '1px solid #8A60C2', 
-                          backgroundColor: 'rgba(106, 69, 156, 0.52)', 
-                          position: 'absolute', 
-                          bottom: '12px', 
-                          right: '12px', 
-                          zIndex: 10,
-                          padding: '0'
-                        }}
-                        onClick={(e) => handleReserveClick(e, wish.id)}
-                      >
-                        Забронювати
-                      </button>
-                    )
-                  )}
                 </div>
-                
-                <div className="wish-card-footer">
-                  <h6 className="wish-name text-truncate fw-bold">{wish.name}</h6>
-                  <p className="wish-price mb-0">₴{wish.price ? wish.price.toFixed(2) : '0.00'}</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-        ))}
+              </Link>
+            </div>
+          );
+        })}
       </div>
 
       {/* МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
@@ -434,13 +489,19 @@ export const WishlistDetails = () => {
             <div className="d-flex justify-content-between" style={{ width: '528px', height: '40px' }}>
               <button className="btn border-0 d-flex align-items-center justify-content-center" 
                       style={{ width: '250px', height: '40px', backgroundColor: '#E6E6E6', color: '#757575', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                      onClick={() => setShowReserveModal(false)}>
+                      onClick={() => setShowReserveModal(false)}
+                      disabled={isReserving}>
                 Скасувати
               </button>
               <button className="btn d-flex align-items-center justify-content-center border-0" 
                       style={{ width: '250px', height: '40px', backgroundColor: '#8A60C2', color: '#F5F5F5', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                      onClick={handleConfirmReservation}>
-                Підтвердити
+                      onClick={handleConfirmReservation}
+                      disabled={isReserving}>
+                {isReserving ? (
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : (
+                  "Підтвердити"
+                )}
               </button>
             </div>
           </div>
