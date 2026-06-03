@@ -3,12 +3,20 @@ package com.dreamspace.api.service;
 import com.dreamspace.api.dto.*;
 import com.dreamspace.api.entity.Wish;
 import com.dreamspace.api.entity.Wishlist;
+import com.dreamspace.api.entity.Reservation;
+import com.dreamspace.api.entity.ReservationParticipant;
+import com.dreamspace.api.entity.User;
 import com.dreamspace.api.enums.PrivacyStatus;
 import com.dreamspace.api.exception.AccessDeniedException;
 import com.dreamspace.api.exception.WishNotFoundException;
 import com.dreamspace.api.exception.WishlistNotFoundException;
+import com.dreamspace.api.exception.BadRequestException;
+import com.dreamspace.api.exception.UserNotFoundException;
+import com.dreamspace.api.repository.UserRepository;
 import com.dreamspace.api.repository.WishRepository;
 import com.dreamspace.api.repository.WishlistRepository;
+import com.dreamspace.api.repository.ReservationParticipantRepository;
+import com.dreamspace.api.repository.ReservationRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,10 +36,22 @@ public class WishlistShareService {
     private final WishlistService wishlistService;
     private final WishRepository wishRepository;
 
-    public WishlistShareService(WishlistRepository wishlistRepository, WishlistService wishlistService, WishRepository wishRepository) {
+    private final UserRepository userRepository;
+    private final ReservationRepository reservationRepository;
+    private final ReservationParticipantRepository reservationParticipantRepository;
+
+    public WishlistShareService(WishlistRepository wishlistRepository,
+                                WishlistService wishlistService,
+                                WishRepository wishRepository,
+                                UserRepository userRepository,
+                                ReservationRepository reservationRepository,
+                                ReservationParticipantRepository reservationParticipantRepository) {
         this.wishlistRepository = wishlistRepository;
         this.wishlistService = wishlistService;
         this.wishRepository = wishRepository;
+        this.userRepository = userRepository;
+        this.reservationRepository = reservationRepository;
+        this.reservationParticipantRepository = reservationParticipantRepository;
     }
 
     public SharedWishlistResponseDto getWishlistByShareToken(String shareToken) {
@@ -143,4 +163,70 @@ public class WishlistShareService {
         );
         return new SharedWishResponseDTO(dto, isOwner);
     }
+
+    @Transactional
+    public ReservationResponseDTO reserveWish(String shareToken, Long wishId, ReservationRequestDTO requestDto) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            throw new AccessDeniedException("Увійдіть в обліковий запис");
+        }
+
+        String currentEmail = authentication.getName();
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new UserNotFoundException());
+
+        // Перевірка існування бажання та відповідності токену
+        Wish wish = wishRepository.findById(wishId)
+                .orElseThrow(() -> new WishNotFoundException());
+
+        Wishlist wishlist = wish.getWishlist();
+
+        if (!wishlist.getShareToken().equals(shareToken)) {
+            throw new WishNotFoundException();
+        }
+
+        boolean isOwner = wishlist.getUser() != null && wishlist.getUser().getId().equals(currentUser.getId());
+
+        // Перевірка приватності вішліста
+        if (wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE && !isOwner) {
+            throw new AccessDeniedException("Доступ заборонено");
+        }
+
+        // Перевірка чи поточний користувач не є власником
+        if (isOwner) {
+            throw new BadRequestException("Ви не можете забронювати це бажання");
+        }
+
+        // Перевірка статусу бажання
+        if (wish.getIsCompleted() || wish.getReservation() != null) {
+            throw new BadRequestException("Ви не можете забронювати це бажання");
+        }
+
+        // Створення запису в таблиці reservation
+        Reservation reservation = new Reservation(
+                wish,
+                currentUser,
+                requestDto.getReservationType(),
+                requestDto.getMaxParticipants()
+        );
+        reservation = reservationRepository.save(reservation);
+
+        // Створення запису в таблиці reservation_participant
+        ReservationParticipant participant = new ReservationParticipant(
+                reservation,
+                currentUser,
+                currentUser.getEmail()
+        );
+        reservationParticipantRepository.save(participant);
+
+        return new ReservationResponseDTO(
+                reservation.getId(),
+                wish.getId(),
+                reservation.getReservationType(),
+                reservation.getMaxParticipants(),
+                1
+        );
+    }
+
 }

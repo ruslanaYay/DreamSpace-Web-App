@@ -4,6 +4,8 @@ import com.dreamspace.api.dto.PageResponseDTO;
 import com.dreamspace.api.dto.SharedWishResponseDTO;
 import com.dreamspace.api.dto.SharedWishlistResponseDto;
 import com.dreamspace.api.dto.WishResponseDTO;
+import com.dreamspace.api.dto.ReservationRequestDTO;
+import com.dreamspace.api.dto.ReservationResponseDTO;
 import com.dreamspace.api.service.WishlistShareService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,5 +37,15 @@ public class WishlistShareController {
     public ResponseEntity<SharedWishResponseDTO> getSharedWishDetails(@PathVariable String shareToken, @PathVariable Long id) {
         SharedWishResponseDTO response = wishlistShareService.getSharedWishDetails(shareToken, id);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/share/{shareToken}/wishes/{id}/reserve")
+    public ResponseEntity<ReservationResponseDTO> reserveWish(
+            @PathVariable String shareToken,
+            @PathVariable Long id,
+            @RequestBody ReservationRequestDTO requestDto) {
+        ReservationResponseDTO response = wishlistShareService.reserveWish(shareToken, id, requestDto);
+
+        return ResponseEntity.ok(response);
     }
 }
