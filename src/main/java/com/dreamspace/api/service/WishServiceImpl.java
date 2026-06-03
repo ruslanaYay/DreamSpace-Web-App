@@ -103,7 +103,7 @@ public class WishServiceImpl implements WishService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Wish> wishesPage = wishRepository.findAllByWishlist_Id(wishlistId, pageable);
-        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> wishResponseMapper.toDTO(wish, currentUserId, isOwner));
+        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> wishResponseMapper.toDTO(wish, currentUserId, isOwner, false));
         return new PageResponseDTO<>(dtoPage);
     }
 
@@ -139,7 +139,7 @@ public class WishServiceImpl implements WishService {
         Wish updatedWish = wishRepository.save(wish);
 
         Long currentUserId = userRepository.findByEmail(currentUserEmail).map(User::getId).orElse(null);
-        return wishResponseMapper.toDTO(updatedWish, currentUserId, true);
+        return wishResponseMapper.toDTO(updatedWish, currentUserId, true, false);
     }
 
     @Override
@@ -156,7 +156,7 @@ public class WishServiceImpl implements WishService {
             throw new AccessDeniedException();
         }
         Long currentUserId = userRepository.findByEmail(email).map(User::getId).orElse(null);
-        return wishResponseMapper.toDTO(wish, currentUserId, isOwner);
+        return wishResponseMapper.toDTO(wish, currentUserId, isOwner,true);
     }
 
     @Override
@@ -170,7 +170,7 @@ public class WishServiceImpl implements WishService {
         wish.setCompleted(!wish.getIsCompleted());
         Wish savedWish = wishRepository.save(wish);
         Long currentUserId = userRepository.findByEmail(email).map(User::getId).orElse(null);
-        return wishResponseMapper.toDTO(savedWish, currentUserId, true);
+        return wishResponseMapper.toDTO(savedWish, currentUserId, true, false);
     }
     @Override
     public void deleteWish(Long id, String email) {

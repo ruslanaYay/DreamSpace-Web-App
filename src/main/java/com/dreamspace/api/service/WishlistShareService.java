@@ -7,11 +7,8 @@ import com.dreamspace.api.entity.User;
 import com.dreamspace.api.entity.Wish;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.PrivacyStatus;
-import com.dreamspace.api.exception.AccessDeniedException;
-import com.dreamspace.api.exception.BadRequestException;
-import com.dreamspace.api.exception.UserNotFoundException;
-import com.dreamspace.api.exception.WishNotFoundException;
-import com.dreamspace.api.exception.WishlistNotFoundException;
+import com.dreamspace.api.enums.ReservationType;
+import com.dreamspace.api.exception.*;
 import com.dreamspace.api.mapper.WishResponseMapper;
 import com.dreamspace.api.repository.ReservationParticipantRepository;
 import com.dreamspace.api.repository.ReservationRepository;
@@ -26,6 +23,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class WishlistShareService {
@@ -111,7 +111,7 @@ public class WishlistShareService {
 
         final Long finalUserId = currentUserId;
         final boolean finalIsOwner = isOwner;
-        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> wishResponseMapper.toDTO(wish, finalUserId, finalIsOwner));
+        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> wishResponseMapper.toDTO(wish, finalUserId, finalIsOwner, false));
         return new PageResponseDTO<>(dtoPage);
     }
 
@@ -139,7 +139,7 @@ public class WishlistShareService {
 
         Wish wish = wishRepository.findByIdAndWishlist_ShareToken(id, shareToken)
                 .orElseThrow(() -> new WishNotFoundException());
-        WishResponseDTO dto = wishResponseMapper.toDTO(wish, currentUserId, isOwner);
+        WishResponseDTO dto = wishResponseMapper.toDTO(wish, currentUserId, isOwner,true);
         return new SharedWishResponseDTO(dto, isOwner);
     }
 
@@ -177,6 +177,33 @@ public class WishlistShareService {
         if (wish.getIsCompleted() || wish.getReservation() != null) {
             throw new BadRequestException("Ви не можете забронювати це бажання");
         }
+        if (ReservationType.GROUP.equals(requestDto.getReservationType())){
+            Map<String, String> validationErrors = new HashMap<>();
+            String inputEmail = requestDto.getEmail();
+            //перевірка пошти
+            if (inputEmail == null || inputEmail.trim().isEmpty()) {
+                validationErrors.put("email", "Це поле обов’язкове");
+            } else {
+                String emailRegex = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+                if (!inputEmail.matches(emailRegex)) {
+                    validationErrors.put("email", "Некоректна адреса електронної пошти");
+                }
+            }
+            //перевірка кількості учасників
+            Integer maxParticipants = requestDto.getMaxParticipants();
+            if (maxParticipants == null){
+                validationErrors.put("maxParticipants", "Це поле обов’язкове");
+            }
+            else if (maxParticipants <= 1) {
+                validationErrors.put("maxParticipants", "Введіть значення більше 1 або перейдіть в одиночний режим");
+            }
+            else if(maxParticipants > 10) {
+                validationErrors.put("maxParticipants", "Кількість дарувальників повинна бути не більше 10 осіб");
+            }
+            if (!validationErrors.isEmpty()) {
+                throw new ValidationException(validationErrors);
+            }
+        }
 
         Reservation reservation = new Reservation(
                 wish,
@@ -186,11 +213,16 @@ public class WishlistShareService {
         );
         reservation = reservationRepository.save(reservation);
 
+        String participantEmail = ReservationType.GROUP.equals(requestDto.getReservationType())
+                ? requestDto.getEmail().trim()
+                : currentUser.getEmail();
+
         ReservationParticipant participant = new ReservationParticipant(
                 reservation,
                 currentUser,
-                currentUser.getEmail()
+                participantEmail
         );
+
         reservationParticipantRepository.save(participant);
 
         return new ReservationResponseDTO(
