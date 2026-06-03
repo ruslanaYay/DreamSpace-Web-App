@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class WishResponseDTO {
     private Long id;
@@ -25,13 +26,18 @@ public class WishResponseDTO {
     private Long reservationId;
     private ReservationType reservationType;
     private boolean isCurrentUserParticipant;
+    private Integer maxParticipants;
+    private Integer currentParticipants;
+    private String initiatorEmail;
+    private List<String> participantEmails;
 
     public WishResponseDTO() {
     }
 
     public WishResponseDTO(Long id, Long wishlistId, String name, String storeLink, BigDecimal price,
                            String description, String imageUrl, Priority priority, LocalDateTime createdAt, boolean isCompleted,
-                           boolean isReserved, Long reservationId, ReservationType reservationType, boolean isCurrentUserParticipant) {
+                           boolean isReserved, Long reservationId, ReservationType reservationType, boolean isCurrentUserParticipant,
+                           Integer maxParticipants, Integer currentParticipants, String initiatorEmail, List<String> participantEmails) {
         this.id = id;
         this.wishlistId = wishlistId;
         this.name = name;
@@ -46,6 +52,10 @@ public class WishResponseDTO {
         this.reservationId = reservationId;
         this.reservationType = reservationType;
         this.isCurrentUserParticipant = isCurrentUserParticipant;
+        this.maxParticipants = maxParticipants;
+        this.currentParticipants = currentParticipants;
+        this.initiatorEmail = initiatorEmail;
+        this.participantEmails = participantEmails;
     }
     public WishResponseDTO(Long id, Long wishlistId, String name, String storeLink, BigDecimal price,
                            String description, String imageUrl, Priority priority, LocalDateTime createdAt, boolean isCompleted) {
@@ -63,6 +73,10 @@ public class WishResponseDTO {
         this.reservationId = null;
         this.reservationType = null;
         this.isCurrentUserParticipant = false;
+        this.maxParticipants = null;
+        this.currentParticipants = null;
+        this.initiatorEmail = null;
+        this.participantEmails = null;
     }
 
     public Long getId() {
@@ -171,5 +185,37 @@ public class WishResponseDTO {
 
     public void setCurrentUserParticipant(boolean currentUserParticipant) {
         isCurrentUserParticipant = currentUserParticipant;
+    }
+
+    public Integer getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    public void setMaxParticipants(Integer maxParticipants) {
+        this.maxParticipants = maxParticipants;
+    }
+
+    public Integer getCurrentParticipants() {
+        return currentParticipants;
+    }
+
+    public void setCurrentParticipants(Integer currentParticipants) {
+        this.currentParticipants = currentParticipants;
+    }
+
+    public String getInitiatorEmail() {
+        return initiatorEmail;
+    }
+
+    public void setInitiatorEmail(String initiatorEmail) {
+        this.initiatorEmail = initiatorEmail;
+    }
+
+    public List<String> getParticipantEmails() {
+        return participantEmails;
+    }
+
+    public void setParticipantEmails(List<String> participantEmails) {
+        this.participantEmails = participantEmails;
     }
 }
