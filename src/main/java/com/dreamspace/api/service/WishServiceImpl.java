@@ -4,21 +4,27 @@ import com.dreamspace.api.dto.PageResponseDTO;
 import com.dreamspace.api.dto.WishRequestDTO;
 import com.dreamspace.api.dto.WishResponseDTO;
 import com.dreamspace.api.dto.WishUpdateRequestDTO;
+import com.dreamspace.api.entity.Reservation;
 import com.dreamspace.api.entity.Wish;
 import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.Priority;
 import com.dreamspace.api.enums.PrivacyStatus;
+import com.dreamspace.api.enums.ReservationType;
 import com.dreamspace.api.exception.AccessDeniedException;
 import com.dreamspace.api.exception.WishlistNotFoundException;
 import com.dreamspace.api.exception.WishNotFoundException;
+import com.dreamspace.api.mapper.WishResponseMapper;
+import com.dreamspace.api.repository.UserRepository;
 import com.dreamspace.api.repository.WishRepository;
 import com.dreamspace.api.repository.WishlistRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import com.dreamspace.api.entity.User;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,6 +35,10 @@ public class WishServiceImpl implements WishService {
     private WishRepository wishRepository;
     @Autowired
     private WishlistRepository wishlistRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private WishResponseMapper wishResponseMapper;
 
     @Override
     public WishResponseDTO createWish(WishRequestDTO dto, String email){
@@ -89,20 +99,11 @@ public class WishServiceImpl implements WishService {
         if (size <= 0) {size = 15;}
         if (size > 15) {size = 15;}
 
+        Long currentUserId = userRepository.findByEmail(email).map(User::getId).orElse(null);
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Wish> wishesPage = wishRepository.findAllByWishlist_Id(wishlistId, pageable);
-        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> new WishResponseDTO(
-                wish.getId(),
-                wish.getWishlist().getId(),
-                wish.getName(),
-                wish.getStoreLink(),
-                wish.getPrice(),
-                wish.getDescription(),
-                wish.getImageUrl(),
-                wish.getPriority(),
-                wish.getCreatedAt(),
-                wish.getIsCompleted()
-        ));
+        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> wishResponseMapper.toDTO(wish, currentUserId, isOwner));
         return new PageResponseDTO<>(dtoPage);
     }
 
@@ -137,21 +138,12 @@ public class WishServiceImpl implements WishService {
         }
         Wish updatedWish = wishRepository.save(wish);
 
-        return new WishResponseDTO(
-                updatedWish.getId(),
-                updatedWish.getWishlist().getId(),
-                updatedWish.getName(),
-                updatedWish.getStoreLink(),
-                updatedWish.getPrice(),
-                updatedWish.getDescription(),
-                updatedWish.getImageUrl(),
-                updatedWish.getPriority(),
-                updatedWish.getCreatedAt(),
-                wish.getIsCompleted()
-        );
+        Long currentUserId = userRepository.findByEmail(currentUserEmail).map(User::getId).orElse(null);
+        return wishResponseMapper.toDTO(updatedWish, currentUserId, true);
     }
 
     @Override
+    @Transactional
     public WishResponseDTO getWishDetails(Long id, String email) {
 
         Wish wish = wishRepository.findById(id)
@@ -159,36 +151,12 @@ public class WishServiceImpl implements WishService {
 
         Wishlist wishlist = wish.getWishlist();
 
-
         boolean isOwner = wishlist.getUser().getEmail().equals(email);
         if (!isOwner && wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE) {
             throw new AccessDeniedException();
         }
-
-        BigDecimal finalPrice = (wish.getPrice() == null || wish.getPrice().compareTo(BigDecimal.ZERO) == 0)
-                ? new BigDecimal("0.00")
-                : wish.getPrice();
-
-        String finalStoreLink = (wish.getStoreLink() == null || wish.getStoreLink().trim().isEmpty())
-                ? null
-                : wish.getStoreLink();
-
-        String finalDescription = (wish.getDescription() == null || wish.getDescription().trim().isEmpty())
-                ? null
-                : wish.getDescription();
-
-        return new WishResponseDTO(
-                wish.getId(),
-                wishlist.getId(),
-                wish.getName(),
-                finalStoreLink,
-                finalPrice,
-                finalDescription,
-                wish.getImageUrl(),
-                wish.getPriority(),
-                wish.getCreatedAt(),
-                wish.getIsCompleted()
-        );
+        Long currentUserId = userRepository.findByEmail(email).map(User::getId).orElse(null);
+        return wishResponseMapper.toDTO(wish, currentUserId, isOwner);
     }
 
     @Override
@@ -201,19 +169,8 @@ public class WishServiceImpl implements WishService {
 
         wish.setCompleted(!wish.getIsCompleted());
         Wish savedWish = wishRepository.save(wish);
-
-        return new WishResponseDTO(
-                savedWish.getId(),
-                savedWish.getWishlist().getId(),
-                savedWish.getName(),
-                savedWish.getStoreLink(),
-                savedWish.getPrice(),
-                savedWish.getDescription(),
-                savedWish.getImageUrl(),
-                savedWish.getPriority(),
-                savedWish.getCreatedAt(),
-                savedWish.getIsCompleted()
-        );
+        Long currentUserId = userRepository.findByEmail(email).map(User::getId).orElse(null);
+        return wishResponseMapper.toDTO(savedWish, currentUserId, true);
     }
     @Override
     public void deleteWish(Long id, String email) {

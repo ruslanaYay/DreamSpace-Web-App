@@ -1,23 +1,23 @@
 package com.dreamspace.api.service;
 
 import com.dreamspace.api.dto.*;
-import com.dreamspace.api.entity.Wish;
-import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.entity.Reservation;
 import com.dreamspace.api.entity.ReservationParticipant;
 import com.dreamspace.api.entity.User;
+import com.dreamspace.api.entity.Wish;
+import com.dreamspace.api.entity.Wishlist;
 import com.dreamspace.api.enums.PrivacyStatus;
 import com.dreamspace.api.exception.AccessDeniedException;
-import com.dreamspace.api.exception.WishNotFoundException;
-import com.dreamspace.api.exception.WishlistNotFoundException;
 import com.dreamspace.api.exception.BadRequestException;
 import com.dreamspace.api.exception.UserNotFoundException;
+import com.dreamspace.api.exception.WishNotFoundException;
+import com.dreamspace.api.exception.WishlistNotFoundException;
+import com.dreamspace.api.mapper.WishResponseMapper;
+import com.dreamspace.api.repository.ReservationParticipantRepository;
+import com.dreamspace.api.repository.ReservationRepository;
 import com.dreamspace.api.repository.UserRepository;
 import com.dreamspace.api.repository.WishRepository;
 import com.dreamspace.api.repository.WishlistRepository;
-import com.dreamspace.api.repository.ReservationParticipantRepository;
-import com.dreamspace.api.repository.ReservationRepository;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,9 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WishlistShareService {
@@ -35,8 +33,8 @@ public class WishlistShareService {
     private final WishlistRepository wishlistRepository;
     private final WishlistService wishlistService;
     private final WishRepository wishRepository;
-
     private final UserRepository userRepository;
+    private final WishResponseMapper wishResponseMapper;
     private final ReservationRepository reservationRepository;
     private final ReservationParticipantRepository reservationParticipantRepository;
 
@@ -44,12 +42,14 @@ public class WishlistShareService {
                                 WishlistService wishlistService,
                                 WishRepository wishRepository,
                                 UserRepository userRepository,
+                                WishResponseMapper wishResponseMapper,
                                 ReservationRepository reservationRepository,
                                 ReservationParticipantRepository reservationParticipantRepository) {
         this.wishlistRepository = wishlistRepository;
         this.wishlistService = wishlistService;
         this.wishRepository = wishRepository;
         this.userRepository = userRepository;
+        this.wishResponseMapper = wishResponseMapper;
         this.reservationRepository = reservationRepository;
         this.reservationParticipantRepository = reservationParticipantRepository;
     }
@@ -81,6 +81,7 @@ public class WishlistShareService {
 
         return new SharedWishlistResponseDto(baseDto, isOwner);
     }
+
     @Transactional(readOnly = true)
     public PageResponseDTO<WishResponseDTO> getSharedWishlistWishes(String shareToken, int page, int size){
         Wishlist wishlist = wishlistRepository.findByShareToken(shareToken)
@@ -88,9 +89,12 @@ public class WishlistShareService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean isOwner = false;
         String currentUsername = null;
+        Long currentUserId = null;
         if (authentication != null && authentication.isAuthenticated()
                 && !authentication.getName().equals("anonymousUser")) {
             currentUsername = authentication.getName();
+
+            currentUserId = userRepository.findByEmail(currentUsername).map(User::getId).orElse(null);
             if (wishlist.getUser() != null && wishlist.getUser().getEmail().equals(currentUsername)) {
                 isOwner = true;
             }
@@ -104,29 +108,27 @@ public class WishlistShareService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Wish> wishesPage = wishRepository.findAllByWishlist_Id(wishlist.getId(), pageable);
-        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> new WishResponseDTO(
-                wish.getId(),
-                wish.getWishlist().getId(),
-                wish.getName(),
-                wish.getStoreLink(),
-                wish.getPrice(),
-                wish.getDescription(),
-                wish.getImageUrl(),
-                wish.getPriority(),
-                wish.getCreatedAt(),
-                wish.getIsCompleted()
-        ));
+
+        final Long finalUserId = currentUserId;
+        final boolean finalIsOwner = isOwner;
+        Page<WishResponseDTO> dtoPage = wishesPage.map(wish -> wishResponseMapper.toDTO(wish, finalUserId, finalIsOwner));
         return new PageResponseDTO<>(dtoPage);
     }
+
+    @Transactional(readOnly = true)
     public SharedWishResponseDTO getSharedWishDetails(String shareToken, Long id){
         Wishlist wishlist = wishlistRepository.findByShareToken(shareToken)
                 .orElseThrow(() -> new WishlistNotFoundException());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean isOwner = false;
         String currentUsername = null;
+
+        Long currentUserId = null;
         if (authentication != null && authentication.isAuthenticated()
                 && !authentication.getName().equals("anonymousUser")) {
             currentUsername = authentication.getName();
+
+            currentUserId = userRepository.findByEmail(currentUsername).map(User::getId).orElse(null);
             if (wishlist.getUser() != null && wishlist.getUser().getEmail().equals(currentUsername)) {
                 isOwner = true;
             }
@@ -135,32 +137,9 @@ public class WishlistShareService {
             throw new AccessDeniedException("Ви не можете переглядати цей вішліст");
         }
 
-        //Перевірка існування і приналежності бажання до вказаного вішліста
         Wish wish = wishRepository.findByIdAndWishlist_ShareToken(id, shareToken)
                 .orElseThrow(() -> new WishNotFoundException());
-        BigDecimal finalPrice = (wish.getPrice() == null || wish.getPrice().compareTo(BigDecimal.ZERO) == 0)
-                ? new BigDecimal("0.00")
-                : wish.getPrice();
-
-        String finalStoreLink = (wish.getStoreLink() == null || wish.getStoreLink().trim().isEmpty())
-                ? null
-                : wish.getStoreLink();
-
-        String finalDescription = (wish.getDescription() == null || wish.getDescription().trim().isEmpty())
-                ? null
-                : wish.getDescription();
-        WishResponseDTO dto=new WishResponseDTO(
-                wish.getId(),
-                wishlist.getId(),
-                wish.getName(),
-                finalStoreLink,
-                finalPrice,
-                finalDescription,
-                wish.getImageUrl(),
-                wish.getPriority(),
-                wish.getCreatedAt(),
-                wish.getIsCompleted()
-        );
+        WishResponseDTO dto = wishResponseMapper.toDTO(wish, currentUserId, isOwner);
         return new SharedWishResponseDTO(dto, isOwner);
     }
 
@@ -176,7 +155,6 @@ public class WishlistShareService {
         User currentUser = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new UserNotFoundException());
 
-        // Перевірка існування бажання та відповідності токену
         Wish wish = wishRepository.findById(wishId)
                 .orElseThrow(() -> new WishNotFoundException());
 
@@ -188,22 +166,18 @@ public class WishlistShareService {
 
         boolean isOwner = wishlist.getUser() != null && wishlist.getUser().getId().equals(currentUser.getId());
 
-        // Перевірка приватності вішліста
         if (wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE && !isOwner) {
             throw new AccessDeniedException("Доступ заборонено");
         }
 
-        // Перевірка чи поточний користувач не є власником
         if (isOwner) {
             throw new BadRequestException("Ви не можете забронювати це бажання");
         }
 
-        // Перевірка статусу бажання
         if (wish.getIsCompleted() || wish.getReservation() != null) {
             throw new BadRequestException("Ви не можете забронювати це бажання");
         }
 
-        // Створення запису в таблиці reservation
         Reservation reservation = new Reservation(
                 wish,
                 currentUser,
@@ -212,7 +186,6 @@ public class WishlistShareService {
         );
         reservation = reservationRepository.save(reservation);
 
-        // Створення запису в таблиці reservation_participant
         ReservationParticipant participant = new ReservationParticipant(
                 reservation,
                 currentUser,
@@ -228,5 +201,4 @@ public class WishlistShareService {
                 1
         );
     }
-
 }
