@@ -39,6 +39,12 @@ public class WishlistController {
 
         return new ResponseEntity<>(myWishlists, HttpStatus.OK);
     }
+    @GetMapping("/all")
+    public ResponseEntity<List<WishlistResponseDTO>> getAllUserWishlistsWithoutPagination() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<WishlistResponseDTO> allWishlists = wishlistService.getAllUserWishlists(email);
+        return new ResponseEntity<>(allWishlists, HttpStatus.OK);
+    }
 
     @PostMapping
     public ResponseEntity<WishlistResponseDTO> createWishlist(@Valid @RequestBody WishlistRequestDTO requestDTO) {

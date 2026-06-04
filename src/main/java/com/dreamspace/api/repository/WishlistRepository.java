@@ -17,4 +17,5 @@ public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
     // пошуку за частковим збігом назви без урахування регістру
     Page<Wishlist> findAllByUserAndNameContainingIgnoreCase(User user, String name, Pageable pageable);
     Optional<Wishlist> findByShareToken(String shareToken);
+    List<Wishlist> findAllByUserOrderByCreatedAtDesc(User user);
 }
