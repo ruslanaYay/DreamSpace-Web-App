@@ -233,4 +233,82 @@ public class WishlistShareService {
                 1
         );
     }
+    @Transactional
+    public ReservationResponseDTO joinReservation(String shareToken, Long wishId, JoinReservationRequestDTO requestDto) {
+        Wishlist wishlist = wishlistRepository.findByShareToken(shareToken)
+                .orElseThrow(() -> new WishlistNotFoundException());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            throw new AccessDeniedException("Увійдіть в обліковий запис");
+        }
+        boolean isOwner = false;
+        String currentEmail = authentication.getName();
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new UserNotFoundException());
+        if (wishlist.getUser() != null && wishlist.getUser().getEmail().equals(currentEmail)) {
+            isOwner = true;
+        }
+        if (wishlist.getPrivacyStatus() == PrivacyStatus.PRIVATE && !isOwner) {
+            throw new AccessDeniedException("Доступ заборонено");
+        }
+        Wish wish = wishRepository.findByIdAndWishlist_ShareToken(wishId, shareToken)
+                .orElseThrow(() -> new WishNotFoundException());
+
+        //специфічні перевірки
+        if (isOwner) {
+            throw new BadRequestException("Ви не можете забронювати це бажання");
+        }
+
+        if (wish.getIsCompleted()) {
+            throw new BadRequestException("Ви не можете забронювати це бажання");
+        }
+        Reservation reservation = reservationRepository.findByWish_Id(wishId)
+                .orElseThrow(() ->
+                        new BadRequestException("Ви не можете забронювати це бажання"));
+
+        if (ReservationType.INDIVIDUAL.equals(reservation.getReservationType())) {
+            throw new BadRequestException("Ви не можете забронювати це бажання");
+        }
+        Map<String, String> validationErrors = new HashMap<>();
+        //перевірка пошти
+        String cleanedEmail = null;
+        if (requestDto.getEmail() == null || requestDto.getEmail().trim().isEmpty()) {
+            validationErrors.put("email", "Це поле обов’язкове");
+        } else {
+            cleanedEmail = requestDto.getEmail().trim();
+            String emailRegex = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+            if (!cleanedEmail.matches(emailRegex)) {
+                validationErrors.put("email", "Некоректна адреса електронної пошти");
+            }
+        }
+        if (!validationErrors.isEmpty()) {
+            throw new ValidationException(validationErrors);
+        }
+        //перевірка вільних місць
+        int currentParticipants = reservationParticipantRepository.countByReservationId(reservation.getId());
+        if (currentParticipants >= reservation.getMaxParticipants()) {
+            throw new BadRequestException("Всі місця вже зайняті");
+        }
+        //перевірка, чи поточний користувач або введена пошта вже є серед учасників цього бронювання
+        boolean alreadyParticipant = reservationParticipantRepository.existsByReservationIdAndUserId(reservation.getId(), currentUser.getId());
+        if (alreadyParticipant) {
+            throw new BadRequestException("Ви вже є учасником цього бронювання");
+        }
+        boolean emailAlreadyUsed = reservationParticipantRepository.existsByReservationIdAndEmailIgnoreCase(reservation.getId(), cleanedEmail);
+        if (emailAlreadyUsed) {
+            throw new BadRequestException("Ви вже є учасником цього бронювання");
+        }
+        //збереження учасника
+        ReservationParticipant participant = new ReservationParticipant(reservation, currentUser, cleanedEmail);
+        reservationParticipantRepository.save(participant);
+
+        return new ReservationResponseDTO(
+                reservation.getId(),
+                wish.getId(),
+                reservation.getReservationType(),
+                reservation.getMaxParticipants(),
+                currentParticipants + 1
+        );
+
+    }
 }
