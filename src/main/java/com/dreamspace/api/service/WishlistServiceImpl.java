@@ -19,6 +19,7 @@ import com.dreamspace.api.repository.WishRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class WishlistServiceImpl implements WishlistService {
@@ -72,7 +73,32 @@ public class WishlistServiceImpl implements WishlistService {
                 });
         return new PageResponseDTO<>(dtoPage);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<WishlistResponseDTO> getAllUserWishlists(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException());
+        List<Wishlist> wishlists = wishlistRepository.findAllByUserOrderByCreatedAtDesc(user);
 
+        return wishlists.stream().map(wishlist -> {
+            int itemCount = (int) wishRepository.countByWishlistId(wishlist.getId());
+            String coverImageUrl = wishRepository
+                    .findFirstByWishlistIdAndImageUrlIsNotNullOrderByCreatedAtAsc(wishlist.getId())
+                    .map(wish -> wish.getImageUrl())
+                    .orElse(null);
+
+            return new WishlistResponseDTO(
+                    wishlist.getId(),
+                    wishlist.getName(),
+                    wishlist.getDescription(),
+                    itemCount,
+                    coverImageUrl,
+                    wishlist.getPrivacyStatus(),
+                    wishlist.getShowBooked() != null ? wishlist.getShowBooked() : false,
+                    wishlist.getCreatedAt()
+            );
+        }).collect(Collectors.toList());
+    }
     @Override
     public WishlistDetailsDTO getWishlistDetails(Long id, String email){
         Wishlist wishlist = wishlistRepository.findById(id)

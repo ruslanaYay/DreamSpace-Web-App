@@ -8,6 +8,7 @@ import java.util.List;
 public interface WishlistService {
 
     PageResponseDTO<WishlistResponseDTO> getUserWishlists(String email, String query, int page, int size);
+    List<WishlistResponseDTO> getAllUserWishlists(String email);
 
     WishlistResponseDTO createWishlist(String email, WishlistRequestDTO dto);
     WishlistDetailsDTO getWishlistDetails(Long id, String email);
