@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ReservationParticipantRepository extends JpaRepository<ReservationParticipant, Long> {
     int countByReservationId(Long reservationId);
+    boolean existsByReservationIdAndUserId(Long reservationId, Long userId);
+    boolean existsByReservationIdAndEmailIgnoreCase(Long reservationId, String email);
 }
