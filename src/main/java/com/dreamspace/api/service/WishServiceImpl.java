@@ -17,6 +17,7 @@ import com.dreamspace.api.mapper.WishResponseMapper;
 import com.dreamspace.api.repository.UserRepository;
 import com.dreamspace.api.repository.WishRepository;
 import com.dreamspace.api.repository.WishlistRepository;
+import com.dreamspace.api.repository.ReservationRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,8 @@ public class WishServiceImpl implements WishService {
     private UserRepository userRepository;
     @Autowired
     private WishResponseMapper wishResponseMapper;
+    @Autowired
+    private ReservationRepository reservationRepository;
 
     @Override
     public WishResponseDTO createWish(WishRequestDTO dto, String email){
@@ -160,6 +163,7 @@ public class WishServiceImpl implements WishService {
     }
 
     @Override
+    @Transactional
     public WishResponseDTO toggleWishStatus(Long id, String email) {
         Wish wish = wishRepository.findById(id)
                 .orElseThrow(() -> new WishNotFoundException());
@@ -167,7 +171,14 @@ public class WishServiceImpl implements WishService {
             throw new AccessDeniedException();
         }
 
-        wish.setCompleted(!wish.getIsCompleted());
+        boolean newStatus = !wish.getIsCompleted();
+        wish.setCompleted(newStatus);
+
+        if (newStatus && wish.getReservation() != null) {
+            reservationRepository.delete(wish.getReservation());
+            wish.setReservation(null);
+        }
+
         Wish savedWish = wishRepository.save(wish);
         Long currentUserId = userRepository.findByEmail(email).map(User::getId).orElse(null);
         return wishResponseMapper.toDTO(savedWish, currentUserId, true, false);
