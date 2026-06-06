@@ -513,6 +513,24 @@ body {
     flex-wrap: wrap;
     gap: 24px; /* Відступ між картками */
     padding-left: 45px; /* Зміщення сітки вправо згідно з макетом */
+    align-items: flex-start; 
+}
+
+/* Адаптивний контейнер для SVG, щоб зірка не злітала */
+.comet-svg-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.comet-svg-container svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Гарантує, що фон і траєкторія розтягнуться правильно */
 }
 
 /* Картка: Розмір 261х347 */
