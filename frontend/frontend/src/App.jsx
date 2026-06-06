@@ -13,9 +13,9 @@ import { Wishlists } from './pages/Wishlists';
 import { Sidebar } from './components/Sidebar';
 import { UserAvatar } from './components/UserAvatar';
 import { WishlistCreate } from './pages/WishlistCreate';
-import { WishlistDetails } from './components/WishlistDetails';
-import { WishItemCreate } from './components/WishItemCreate';
-import { WishItemDetails } from './components/WishItemDetails';
+import { WishlistDetails } from './pages/WishlistDetails';
+import { WishItemDetails } from './pages/WishItemDetails';
+import { WishItemCreate } from './pages/WishItemCreate';
 import { Pagination } from './components/Pagination';
 
 // Компонент-обгортка для захисту маршруту

@@ -10,7 +10,7 @@ export const ReserveWishModal = ({
   setWishes,
   fetchWishlistData,
   currentPage,
-  selectedWish,
+  selectedWish, // Дані поточного бажання приходять сюди
   navigate,
   initialMode // 'RESERVE' або 'JOIN'
 }) => {
@@ -325,13 +325,12 @@ export const ReserveWishModal = ({
             </button>
 
             <div className="w-100 text-center mt-2 mb-4">
-              <h4 className="fw-bold mb-3" style={{ color: '#2C2C2C', fontSize: '24px', fontFamily: 'Raleway, sans-serif' }}>
+              <h4 className="fw-bold mb-2" style={{ color: '#4C4C4C', fontSize: '24px', lineHeight: '29px' }}>
                 Долучитися до бронювання
               </h4>
-              <p className="text-muted mb-2 px-2" style={{ fontSize: '14px', lineHeight: '22px' }}>
-                {selectedWish?.creatorEmail || "nure@gmail.com"} відкрив спільне бронювання для {selectedWish?.maxParticipants || 4} осіб.
+              <p className="mb-0 mx-auto px-2" style={{ color: '#000000', fontSize: '14px', lineHeight: '22px', maxWidth: '480px' }}>
+                {`${selectedWish?.initiatorEmail || 'Користувач'} відкрив спільне бронювання для ${selectedWish?.maxParticipants || 2} осіб. Бажаєте долучитися?`}
               </p>
-              <p className="text-dark fw-medium" style={{ fontSize: '14px' }}>Бажаєте долучитися?</p>
             </div>
 
             <div className="mb-4 px-2">
