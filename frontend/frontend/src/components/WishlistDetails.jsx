@@ -5,6 +5,7 @@ import { EditWishlistModal } from '../components/EditWishlistModal';
 import { EditWishItemModal } from '../components/EditWishItemModal'; 
 import { DeleteWishModal } from './DeleteWishModal';
 import { Pagination } from '../components/Pagination'; // Імпортуємо пагінацію
+import { ReserveWishModal } from './ReserveWishlistModal';
 import "../App.css";
 
 export const WishlistDetails = () => {
@@ -30,10 +31,13 @@ export const WishlistDetails = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  // Нові стани для модального вікна бронювання
-  const [showReserveModal, setShowReserveModal] = useState(false);
-  const [reserveWishId, setReserveWishId] = useState(null);
-  const [isReserving, setIsReserving] = useState(false); // Стан loading для кнопки «Підтвердити»
+  // --- СТАН КЕРУВАННЯ МОДАЛКОЮ БРОНЮВАННЯ (ОБИДВА РЕЖИМИ) ---
+  const [reserveModalConfig, setReserveModalConfig] = useState({
+    show: false,
+    mode: null, // 'RESERVE' або 'JOIN'
+    wishId: null,
+    wishData: null
+  });
 
   // 1. Завантаження даних вішліста та його бажань з пагінацією
   const fetchWishlistData = async (page = 0) => {
@@ -180,6 +184,43 @@ export const WishlistDetails = () => {
     } catch (err) { console.error(err); }
   };
 
+  // --- ОБРОБНИКИ КЛІКІВ ДЛЯ МОДАЛКИ БРОНЮВАННЯ ---
+  const handleReserveClick = (e, wish) => {
+    e.preventDefault(); e.stopPropagation();
+    
+    // Перевірка на авторизацію користувача
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setReserveModalConfig({
+      show: true,
+      mode: 'RESERVE',
+      wishId: wish.id,
+      wishData: wish
+    });
+  };
+
+  const handleJoinClick = (e, wish) => {
+    e.preventDefault(); e.stopPropagation();
+    
+    // Перевірка на авторизацію користувача
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setReserveModalConfig({
+      show: true,
+      mode: 'JOIN',
+      wishId: wish.id,
+      wishData: wish
+    });
+  };
+
   const getPriorityIcon = (priority) => {
     switch (priority) {
       case 'HIGH': return 'bi-emoji-smile text-warning'; 
@@ -188,70 +229,7 @@ export const WishlistDetails = () => {
       default: return '';
     }
   };
-
-  const handleReserveClick = (e, wishId) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Перевірка авторизації користувача
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    setReserveWishId(wishId);
-    setShowReserveModal(true);
-  };
-
-  const handleConfirmReservation = async () => {
-    if (!reserveWishId || isReserving) return;
-    
-    setIsReserving(true);
-    const token = localStorage.getItem('token');
-
-    try {
-      const response = await fetch(`http://localhost:8085/api/wishlists/share/${shareToken}/wishes/${reserveWishId}/reserve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          reservationType: "INDIVIDUAL",
-          maxParticipants: 1,
-          email: null
-        })
-      });
-
-      const resData = await response.json();
-
-      if (response.ok) {
-        // Оновлюємо стан обраного бажання локально на основі отриманої відповіді від бекенду
-        setWishes(prevWishes => 
-          prevWishes.map(wish => 
-            wish.id === reserveWishId ? { ...wish, isReserved: true, reservationType: "INDIVIDUAL" } : wish
-          )
-        );
-        setShowReserveModal(false);
-        setReserveWishId(null);
-      } else {
-        // Обробка помилок відповідно до специфікації API
-        alert(resData.message || "Помилка при бронюванні бажання");
-        if (response.status === 410 || response.status === 404 || response.status === 400) {
-          fetchWishlistData(currentPage); // Перезавантажуємо актуальний стан позицій
-        }
-        setShowReserveModal(false);
-        setReserveWishId(null);
-      }
-    } catch (err) {
-      console.error("Помилка при бронюванні бажання:", err);
-      alert("Не вдалося з'єднатися з сервером");
-    } finally {
-      setIsReserving(false);
-    }
-  };
-
+  
   if (loading && !wishlist) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
   if (error === 'Вішліст не знайдено або доступ заборонено' || error === 'Вішліст не знайдено') {
     return (
@@ -327,15 +305,19 @@ export const WishlistDetails = () => {
         )}
 
         {wishes.map((wish) => {
-          // Якщо бекенд не дає isReserved на роуті власника, 
-          // перевіряємо наявність заповненого reservationType або reservationId
-          const isWishReserved = wish.isReserved === true || !!wish.reservationType || !!wish.reservationId;
+          const hasIndividualReservation = wish.isReserved === true && wish.reservationType === "INDIVIDUAL";
+          const hasGroupReservation = wish.isReserved === true && wish.reservationType === "GROUP";
+          
+          const currentParticipants = wish.currentParticipants || 0;
+          const maxParticipants = wish.maxParticipants || 1;
+          const isGroupFilled = currentParticipants >= maxParticipants;
+          const isWishReserved = wish.isReserved === true;
 
-          return (
+        return (
             <div key={wish.id} className="wish-item-wrapper">
               <Link to={shareToken
-                    ? `/wishlist/share/${shareToken}/wish/${wish.id}`
-                    : `/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
+                  ? `/wishlist/share/${shareToken}/wish/${wish.id}`
+                  : `/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
                 <div className="wish-item-card h-100 position-relative">
                   
                   {/* Бейдж: Виконано */}
@@ -345,11 +327,23 @@ export const WishlistDetails = () => {
                     </div>
                   )}
 
-                  {/* Відображення бейджа «Заброньовано» на основі комбінованої перевірки */}
-                  {!wish.isCompleted && isWishReserved && (
-                    <div className="completed-badge reserved" style={{ zIndex: 45 }}>
-                      <i className="bi bi-lock-fill me-1"></i> Заброньовано
-                    </div>
+                  {/* Логіка відображення маркерів бронювання згідно з ТЗ */}
+                  {!wish.isCompleted && (
+                    <>
+                      {/* Одиночне бронювання */}
+                      {hasIndividualReservation && (
+                        <div className="completed-badge reserved" style={{ zIndex: 45 }}>
+                          <i className="bi bi-lock-fill me-1"></i> Заброньовано
+                        </div>
+                      )}
+                      
+                      {/* Спільне/Групове бронювання */}
+                      {hasGroupReservation && (
+                        <div className="completed-badge reserved" style={{ zIndex: 45, backgroundColor: '#8A60C2' }}>
+                          <i className="bi bi-lock-fill me-1"></i> Заброньовано: {currentParticipants} з {maxParticipants}
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {isOwner && (
@@ -426,29 +420,35 @@ export const WishlistDetails = () => {
                       </div>
                     ) : (
                       /* Для гостей: Показувати кнопку тільки якщо не заброньовано і не виконано */
-                      !wish.isCompleted && !isWishReserved && (
+                      !wish.isCompleted && (
+                      <>
+                        {!isWishReserved && wish.reservationType !== "GROUP" && (
                         <button
                           className="btn d-flex align-items-center justify-content-center text-white"
-                          style={{ 
-                            width: '127px', 
-                            height: '32px', 
-                            borderRadius: '8px', 
-                            fontWeight: '500', 
-                            fontSize: '14px',
-                            border: '1px solid #8A60C2', 
-                            backgroundColor: 'rgba(106, 69, 156, 0.52)', 
-                            position: 'absolute', 
-                            bottom: '12px', 
-                            right: '12px', 
-                            zIndex: 10,
-                            padding: '0'
+                          style={{ width: '127px', height: '32px', borderRadius: '8px', fontWeight: '500', fontSize: '14px', border: '1px solid #8A60C2', 
+                            backgroundColor: 'rgba(106, 69, 156, 0.52)', position: 'absolute', bottom: '12px', right: '12px', zIndex: 10, padding: '0'
                         }}
-                          onClick={(e) => handleReserveClick(e, wish.id)}
+                          onClick={(e) => handleReserveClick(e, wish)}
                         >
                           Забронювати
                         </button>
-                      )
-                    )}
+                      )}
+
+                    {/* Кнопка "Долучитися" активна, коли бажання заброньоване як GROUP, ліміт місць не вичерпано і поточний юзер ще не всередині */}
+                    {hasGroupReservation && !isGroupFilled && !wish.isCurrentUserParticipant && (
+                      <button
+                          className="btn d-flex align-items-center justify-content-center text-white"
+                          style={{ width: '127px', height: '32px', borderRadius: '8px', fontWeight: '500', fontSize: '14px', border: '1px solid #8A60C2', 
+                            backgroundColor: 'rgba(106, 69, 156, 0.52)', position: 'absolute', bottom: '12px', right: '12px', zIndex: 10, padding: '0'
+                        }}
+                          onClick={(e) => handleJoinClick(e, wish)}
+                        >
+                          Долучитися
+                        </button>
+                        )}
+                      </>
+                    )
+                  )}
                   </div>
                   
                   <div className="wish-card-footer">
@@ -462,51 +462,20 @@ export const WishlistDetails = () => {
         })}
       </div>
 
-      {/* МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
-      {showReserveModal && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
-             style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 1050 }}
-             onClick={() => setShowReserveModal(false)}>
-          <div className="bg-white position-relative shadow d-flex flex-column align-items-center justify-content-between p-4" 
-               style={{ width: '576px', height: '209px', borderRadius: '16px' }}
-               onClick={(e) => e.stopPropagation()}>
-            
-            <button className="btn border-0 position-absolute p-1 bg-transparent" 
-                    style={{ right: '20px', top: '16px' }}
-                    onClick={() => setShowReserveModal(false)}>
-              <i className="bi bi-x-lg text-muted" style={{ fontSize: '1.1rem' }}></i>
-            </button>
-
-            <div className="w-100 text-center mt-2">
-              <h4 className="fw-bold mb-2" style={{ color: '#4C4C4C', fontSize: '24px', lineHeight: '29px' }}>
-                Бронювання бажання
-              </h4>
-              <p className="mb-0 mx-auto" style={{ color: '#000000', fontSize: '14px', lineHeight: '22px', maxWidth: '480px' }}>
-                Ви впевнені, що хочете забронювати це бажання? Інші користувачі більше не зможуть його обрати.
-              </p>
-            </div>
-
-            <div className="d-flex justify-content-between" style={{ width: '528px', height: '40px' }}>
-              <button className="btn border-0 d-flex align-items-center justify-content-center" 
-                      style={{ width: '250px', height: '40px', backgroundColor: '#E6E6E6', color: '#757575', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                      onClick={() => setShowReserveModal(false)}
-                      disabled={isReserving}>
-                Скасувати
-              </button>
-              <button className="btn d-flex align-items-center justify-content-center border-0" 
-                      style={{ width: '250px', height: '40px', backgroundColor: '#8A60C2', color: '#F5F5F5', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                      onClick={handleConfirmReservation}
-                      disabled={isReserving}>
-                {isReserving ? (
-                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                ) : (
-                  "Підтвердити"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ОНОВЛЕНИЙ КОМПОНЕНТ ДЛЯ ОБОХ ТИПІВ МОДАЛОК */}
+      <ReserveWishModal 
+        show={reserveModalConfig.show}
+        initialMode={reserveModalConfig.mode}
+        wishId={reserveModalConfig.wishId}
+        selectedWish={reserveModalConfig.wishData}
+        shareToken={shareToken}
+        id={id}
+        onClose={() => setReserveModalConfig({ show: false, mode: null, wishId: null, wishData: null })}
+        setWishes={setWishes}
+        fetchWishlistData={fetchWishlistData}
+        currentPage={currentPage}
+        navigate={navigate}
+      />
 
       {/* ПАГІНАЦІЯ БАЖАНЬ */}
       {totalPages > 1 && (
