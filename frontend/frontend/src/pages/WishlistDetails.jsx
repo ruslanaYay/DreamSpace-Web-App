@@ -236,101 +236,101 @@ export const WishlistDetails = () => {
   };
 
   // Обробник натискання кнопки "Скасувати" на картці бажання
-const handleCancelClick = (e, wish) => {
-  e.preventDefault(); 
-  e.stopPropagation();
-  
-  // Беремо reservationId безпосередньо з об'єкта бажання
-  setCancelModal({ 
-    show: true, 
-    wishId: wish.id, 
-    reservationId: wish.reservationId 
-  });
-};
-
-const handleCancelReservationConfirm = async () => {
-  // Перевіряємо наявність ID бронювання
-  if (!cancelModal.reservationId) {
-    alert("Не вдалося визначити ідентифікатор бронювання.");
-    return;
-  }
-  
-  setIsCanceling(true);
-  const token = localStorage.getItem('token');
-  
-  try {
-    const response = await fetch(`http://localhost:8085/api/reservations/${cancelModal.reservationId}/leave`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+  const handleCancelClick = (e, wish) => {
+    e.preventDefault(); 
+    e.stopPropagation();
+    
+    // Беремо reservationId безпосередньо з об'єкта бажання
+    setCancelModal({ 
+      show: true, 
+      wishId: wish.id, 
+      reservationId: wish.reservationId 
     });
+  };
 
-    const resData = await response.json().catch(() => ({}));
+  const handleCancelReservationConfirm = async () => {
+    // Перевіряємо наявність ID бронювання
+    if (!cancelModal.reservationId) {
+      alert("Не вдалося визначити ідентифікатор бронювання.");
+      return;
+    }
+    
+    setIsCanceling(true);
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(`http://localhost:8085/api/reservations/${cancelModal.reservationId}/leave`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    if (response.status === 200) {
-      // ІНТЕГРАЦІЯ З API: Обробка успішної відповіді сервера
-      setWishes(prevWishes => 
-        prevWishes.map(wish => {
-          if (wish.id === cancelModal.wishId) {
-            
-            // Варіант 1: Користувач був останнім, групу повністю видалено
-            if (resData.reservationId === null) {
+      const resData = await response.json().catch(() => ({}));
+
+      if (response.status === 200) {
+        // ІНТЕГРАЦІЯ З API: Обробка успішної відповіді сервера
+        setWishes(prevWishes => 
+          prevWishes.map(wish => {
+            if (wish.id === cancelModal.wishId) {
+              
+              // Варіант 1: Користувач був останнім, групу повністю видалено
+              if (resData.reservationId === null) {
+                return {
+                  ...wish,
+                  isReserved: false,
+                  reservationId: null,
+                  reservationType: null,
+                  maxParticipants: null,
+                  currentParticipants: null,
+                  isCurrentUserParticipant: false,
+                  participantEmails: [] // Очищуємо список для сторінки деталей
+                };
+              } 
+              
+              // Варіант 2: У групі ще залишилися інші учасники
               return {
                 ...wish,
-                isReserved: false,
-                reservationId: null,
-                reservationType: null,
-                maxParticipants: null,
-                currentParticipants: null,
-                isCurrentUserParticipant: false,
-                participantEmails: [] // Очищуємо список для сторінки деталей
+                reservationId: resData.reservationId,
+                reservationType: resData.reservationType,
+                maxParticipants: resData.maxParticipants,
+                currentParticipants: resData.currentParticipants,
+                isCurrentUserParticipant: false, // Цей користувач успішно вийшов
+                // Якщо на бекенді є свой сесійний email, видаляємо його з масиву відображення (для детальної сторінки)
+                participantEmails: wish.participantEmails 
+                  ? wish.participantEmails.filter(email => email !== localStorage.getItem('userEmail')) 
+                  : []
               };
-            } 
-            
-            // Варіант 2: У групі ще залишилися інші учасники
-            return {
-              ...wish,
-              reservationId: resData.reservationId,
-              reservationType: resData.reservationType,
-              maxParticipants: resData.maxParticipants,
-              currentParticipants: resData.currentParticipants,
-              isCurrentUserParticipant: false, // Цей користувач успішно вийшов
-              // Якщо на бекенді є свій сесійний email, видаляємо його з масиву відображення (для детальної сторінки)
-              participantEmails: wish.participantEmails 
-                ? wish.participantEmails.filter(email => email !== localStorage.getItem('userEmail')) 
-                : []
-            };
-          }
-          return wish;
-        })
-      );
+            }
+            return wish;
+          })
+        );
 
-      // Закриваємо модальне вікно
-      setCancelModal({ show: false, wishId: null, reservationId: null });
-      
-      // Опціонально: робимо фоновий fetch для синхронізації з іншими компонентами, якщо необхідно
-      // fetchWishlistData(currentPage);
+        // Закриваємо модальне вікно
+        setCancelModal({ show: false, wishId: null, reservationId: null });
+        
+        // Опціонально: робимо фоновий fetch для синхронізації з іншими компонентами, якщо необхідно
+        // fetchWishlistData(currentPage);
 
-    } else if (response.status === 401) {
-      alert(resData.message || "Увійдіть в обліковий запис");
-      navigate('/login');
-    } else if (response.status === 403) {
-      alert(resData.message || "Доступ заборонено: ви не є учасником цього бронювання");
-      setCancelModal({ show: false, wishId: null, reservationId: null });
-    } else {
-      // Обробка помилок 400, 404, 500
-      alert(resData.message || "Сталася неочікувана помилка при спробі покинути бронювання");
-      setCancelModal({ show: false, wishId: null, reservationId: null });
+      } else if (response.status === 401) {
+        alert(resData.message || "Увійдіть в обліковий запис");
+        navigate('/login');
+      } else if (response.status === 403) {
+        alert(resData.message || "Доступ заборонено: ви не є учасником цього бронювання");
+        setCancelModal({ show: false, wishId: null, reservationId: null });
+      } else {
+        // Обробка помилок 400, 404, 500
+        alert(resData.message || "Сталася неочікувана помилка при спробі покинути бронювання");
+        setCancelModal({ show: false, wishId: null, reservationId: null });
+      }
+    } catch (err) {
+      console.error("Помилка мережі при скасуванні бронювання:", err);
+      alert("Сталася помилка з'єднання з сервером");
+    } finally {
+      setIsCanceling(false);
     }
-  } catch (err) {
-    console.error("Помилка мережі при скасуванні бронювання:", err);
-    alert("Сталася помилка з'єднання з сервером");
-  } finally {
-    setIsCanceling(false);
-  }
-};
+  };
   
   if (loading && !wishlist) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
   if (error === 'Вішліст не знайдено або доступ заборонено' || error === 'Вішліст не знайдено') {
@@ -458,7 +458,7 @@ const handleCancelReservationConfirm = async () => {
                          <div className="position-absolute shadow bg-white" style={{ top: '40px', right: '0px', zIndex: 110, borderRadius: '12px', minWidth: '160px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
                             <div className="d-flex flex-column text-start">
                               <div className="px-3 py-2 text-dark menu-hover-effect" 
-                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedWish(wish); setIsEditWishModalOpen(true); setActiveMenuId(null); }} 
+                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedWish(wish); setIsEditWishItemModalOpen(true); setActiveMenuId(null); }} 
                                    style={{ cursor: 'pointer', fontSize: '14px' }}>
                                 Редагувати
                               </div>
@@ -524,28 +524,28 @@ const handleCancelReservationConfirm = async () => {
                       !wish.isCompleted && (
                         <>
                           {wish.isCurrentUserParticipant && hasGroupReservation ? (
-      <button
-        className="btn d-flex align-items-center justify-content-center"
-        style={{ 
-          width: '127px', 
-          height: '32px', 
-          borderRadius: '8px', 
-          fontWeight: '500', 
-          fontSize: '14px', 
-          border: '1px solid rgba(220, 54, 46, 0.8)', 
-          backgroundColor: 'rgba(244, 129, 124, 0.48)', 
-          color: '#f5f5f5', 
-          position: 'absolute', 
-          bottom: '12px', 
-          right: '12px', 
-          zIndex: 10, 
-          padding: '0'
-        }}
-        onClick={(e) => handleCancelClick(e, wish)}
-      >
-        Скасувати
-      </button>
-    ) : (
+                            <button
+                              className="btn d-flex align-items-center justify-content-center"
+                              style={{ 
+                                width: '127px', 
+                                height: '32px', 
+                                borderRadius: '8px', 
+                                fontWeight: '500', 
+                                fontSize: '14px', 
+                                border: '1px solid rgba(220, 54, 46, 0.8)', 
+                                backgroundColor: 'rgba(244, 129, 124, 0.48)', 
+                                color: '#f5f5f5', 
+                                position: 'absolute', 
+                                bottom: '12px', 
+                                right: '12px', 
+                                zIndex: 10, 
+                                padding: '0'
+                              }}
+                              onClick={(e) => handleCancelClick(e, wish)}
+                            >
+                              Скасувати
+                            </button>
+                          ) : (
                             <>
                               {!isWishReserved && wish.reservationType !== "GROUP" && (
                                 <button
@@ -559,6 +559,7 @@ const handleCancelReservationConfirm = async () => {
                                 </button>
                               )}
 
+                              {/* Сховано кнопку «Долучитися», якщо група заповнена (`!isGroupFilled`) */}
                               {hasGroupReservation && !isGroupFilled && (
                                 <button
                                   className="btn d-flex align-items-center justify-content-center text-white"

@@ -22,13 +22,9 @@ export const WishItemDetails = () => {
 
   // Стан для модального вікна бронювання гостем
   const [showReserveModal, setShowReserveModal] = useState(false);
-  // Новий стан для режиму модалки: 'INDIVIDUAL' або 'JOIN_GROUP'
   const [reserveMode, setReserveMode] = useState('INDIVIDUAL');
-  // Стан для введення пошти при долученні до спільного бронювання
   const [participantEmail, setParticipantEmail] = useState("");
-  // Стан для помилки валідації пошти
   const [emailError, setEmailError] = useState("");
-  // Стан для відстеження процесу відправки запиту бронювання
   const [isReserving, setIsReserving] = useState(false);
 
   // Стан для скасування спільного бронювання
@@ -145,7 +141,6 @@ export const WishItemDetails = () => {
     } catch (err) { console.error(err); }
   };
 
-  // Оновлена та інтегрована з ТЗ функція підтвердження бронювання (для двох режимів)
   const handleConfirmReservation = async () => {
     if (isReserving || !itemId) return;
     setEmailError("");
@@ -159,7 +154,6 @@ export const WishItemDetails = () => {
       return;
     }
 
-    // Валідація електронної пошти у разі долучення до спільного бронювання
     if (reserveMode === 'JOIN_GROUP') {
       if (!participantEmail.trim()) {
         setEmailError("Поле email обов'язкове для заповнення");
@@ -184,11 +178,9 @@ export const WishItemDetails = () => {
       let options = { headers, method: 'POST' };
 
       if (reserveMode === 'JOIN_GROUP') {
-        // Ендпоінт бекенду для долучення до групового бронювання
         url = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes/${itemId}/join`;
         options.body = JSON.stringify({ email: participantEmail });
       } else {
-        // Стандартне індивідуальне бронювання
         url = shareToken 
           ? `http://localhost:8085/api/wishlists/share/${shareToken}/wishes/${itemId}/reserve`
           : `http://localhost:8085/api/wishes/${itemId}/reserve`;
@@ -205,10 +197,8 @@ export const WishItemDetails = () => {
       if (response.ok) {
         setShowReserveModal(false);
         setParticipantEmail("");
-        // Повністю перечитуємо актуальний стан з сервера для уникнення розбіжностей
         fetchWishData();
       } else {
-        // Обробка специфічних помилок валідації пошти з бекенду
         if (resData.email) {
           setEmailError(resData.email);
         } else {
@@ -228,7 +218,7 @@ export const WishItemDetails = () => {
     }
   };
 
-  // ОНОВЛЕНИЙ ЕНДПОІНТ ТА ЛОГІКА ЗГІДНО З НОВИМ БЕКЕНД ТЗ
+  // Ендпоінт відповідно до бекенд ТЗ: DELETE /api/reservations/{reservationId}/leave
   const handleCancelReservation = async () => {
     if (isCanceling || !item || !item.reservationId) return;
     setIsCanceling(true);
@@ -240,7 +230,6 @@ export const WishItemDetails = () => {
     };
 
     try {
-      // Новий ендпоінт бекенду: DELETE /api/reservations/{reservationId}/leave
       const url = `http://localhost:8085/api/reservations/${item.reservationId}/leave`;
 
       const response = await fetch(url, {
@@ -252,8 +241,7 @@ export const WishItemDetails = () => {
 
       if (response.ok) {
         setShowCancelModal(false);
-        // Перечитуємо актуальний стан з сервера (лічильник оновиться, пошта прибереться)
-        fetchWishData();
+        fetchWishData(); // Свіжі дані з сервера (лічильник оновиться, пошта прибереться)
       } else {
         alert(resData.message || "Сталася помилка при скасуванні участі");
         setShowCancelModal(false);
@@ -297,7 +285,6 @@ export const WishItemDetails = () => {
   );
   if (!item) return null;
 
-  // Логіка визначення бронювання на основі нових полів DTO
   const isWishReserved = item.isReserved === true;
   const hasIndividualReservation = isWishReserved && item.reservationType === "INDIVIDUAL";
   const hasGroupReservation = isWishReserved && item.reservationType === "GROUP";
@@ -318,14 +305,12 @@ export const WishItemDetails = () => {
             {/* Лівий блок: Зображення */}
             <div className="position-relative shadow-sm bg-white" style={{ width: '436px', height: '470px', flexShrink: 0, overflow: 'hidden', borderRadius: '12px' }}>
               
-              {/* Бейдж: Виконано */}
               {item.isCompleted && (
                   <div className="completed-badge" style={{ zIndex: 25 }}>
                     <i className="bi bi-check-lg me-1"></i> Виконано
                   </div>
               )}
 
-              {/* Бейджі бронювання згідно з оновленим ТЗ */}
               {!item.isCompleted && isWishReserved && (
                 <>
                   {hasIndividualReservation && (
@@ -408,7 +393,6 @@ export const WishItemDetails = () => {
               <p className="text-muted mb-4" style={{ fontSize: '1.1rem' }}>Додано {formatDate(item.createdAt)}</p>
               <h2 className="fw-bold mb-4" style={{ fontSize: '2.2rem', color: '#4C4C4C' }}>{Number(item.price || 0).toFixed(2)} ₴</h2>
 
-              {/* Опис бажання */}
               {item.description && item.description.trim() !== "" && (
                 <div className="mb-5">
                   <p style={{ fontSize: '1.2rem', color: '#4C4C4C', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -417,7 +401,6 @@ export const WishItemDetails = () => {
                 </div>
               )}
 
-              {/* Форма посилання */}
               {item.storeLink && (
                   <div className="mt-4 mb-4">
                     <h6 className="fw-bold mb-2" style={{ color: '#4C4C4C' }}>Посилання</h6>
@@ -447,10 +430,8 @@ export const WishItemDetails = () => {
                   </button>
               )}
 
-              {/* Логіка відображення кнопок та учасників для сторонніх користувачів */}
               {!isOwner && !item.isCompleted && (
                 <>
-                  {/* Якщо бажання зовсім вільне */}
                   {!isWishReserved && (
                     <button
                       className="btn mt-2 w-100 d-flex align-items-center justify-content-center text-white"
@@ -461,7 +442,7 @@ export const WishItemDetails = () => {
                     </button>
                   )}
 
-                  {/* Спільне групове бронювання: область учасників (якщо вони є) відображається виключно тут */}
+                  {/* Список учасників спільного бронювання */}
                   {hasGroupReservation && item.participantEmails && item.participantEmails.length > 0 && (
                     <div className="mt-4 mb-4">
                       <h6 className="fw-bold mb-2" style={{ color: '#4C4C4C' }}>Учасники спільного бронювання</h6>
@@ -483,7 +464,7 @@ export const WishItemDetails = () => {
                     </div>
                   )}
 
-                  {/* Кнопка «Долучитися» йде строго після області учасників */}
+                  {/* Умова `!isGroupFilled`: Кнопка «Долучитися» ховається, якщо група заповнена */}
                   {hasGroupReservation && !isGroupFilled && !item.isCurrentUserParticipant && (
                     <button
                       className="btn mt-2 w-100 d-flex align-items-center justify-content-center text-white"
@@ -518,7 +499,7 @@ export const WishItemDetails = () => {
           </div>
         </div>
 
-        {/* ДИНАМІЧНЕ МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ БРОНЮВАННЯ ТА ДОЛУЧЕННЯ */}
+        {/* МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ БРОНЮВАННЯ ТА ДОЛУЧЕННЯ */}
         {showReserveModal && (
           <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
                style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 1050 }}
@@ -545,7 +526,6 @@ export const WishItemDetails = () => {
                 </p>
               </div>
 
-              {/* Форма для введення email у разі долучення до спільного бронювання */}
               {reserveMode === 'JOIN_GROUP' && (
                 <div className="w-100 px-3 text-start">
                   <label className="form-label fw-semibold text-muted" style={{ fontSize: '13px' }}>Електронна адреса *</label>
