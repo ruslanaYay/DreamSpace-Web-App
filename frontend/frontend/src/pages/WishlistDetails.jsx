@@ -4,7 +4,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { EditWishlistModal } from '../components/EditWishlistModal';
 import { EditWishItemModal } from '../components/EditWishItemModal'; 
 import { DeleteWishModal } from '../components/DeleteWishModal';
-import { Pagination } from '../components/Pagination'; // Імпортуємо пагінацію
+import { Pagination } from '../components/Pagination'; 
 import { ReserveWishModal } from '../components/ReserveWishlistModal';
 import { CancelReservationModal } from '../components/CancelReservationModal';
 import "../App.css";
@@ -17,7 +17,7 @@ export const WishlistDetails = () => {
   const [wishes, setWishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isOwner, setIsOwner] = useState(false); // Додаємо стейт для перевірки прав
+  const [isOwner, setIsOwner] = useState(false); 
 
   // --- СТАН ДЛЯ ПАГІНАЦІЇ БАЖАНЬ ---
   const [currentPage, setCurrentPage] = useState(0);
@@ -25,7 +25,7 @@ export const WishlistDetails = () => {
   const [totalElements, setTotalElements] = useState(0);
 
   const [isEditListModalOpen, setIsEditListModalOpen] = useState(false);
-  const [isEditWishModalOpen, setIsEditWishModalOpen] = useState(false);
+  const [isEditWishModalOpen, setIsEditWishModalOpen] = useState(false); // Виправлено назву відповідно до виклику
   const [selectedWish, setSelectedWish] = useState(null);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ show: false, wishId: null });
@@ -33,13 +33,15 @@ export const WishlistDetails = () => {
   const [showToast, setShowToast] = useState(false);
 
   // --- СТАН ДЛЯ СКАСУВАННЯ УЧАСТІ В БРОНЮВАННІ ---
-  const [cancelModal, setCancelModal] = useState({ show: false, wishId: null });
+  const [cancelModal, setCancelModal] = useState({ show: false, wishId: null, reservationId: null });
   const [isCanceling, setIsCanceling] = useState(false);
 
-  // --- СТАН КЕРУВАННЯ МОДАЛКОЮ БРОНЮВАННЯ (ОБИДВА РЕЖИМИ) ---
+  const itemsPerPage = 15;
+
+  // --- СТАН КЕРУВАННЯ МОДАЛКОЮ БРОНЮВАННЯ ---
   const [reserveModalConfig, setReserveModalConfig] = useState({
     show: false,
-    mode: null, // 'RESERVE' або 'JOIN'
+    mode: null, 
     wishId: null,
     wishData: null
   });
@@ -55,15 +57,16 @@ export const WishlistDetails = () => {
     try {
       setLoading(true);
       let wishlistUrl, wishesUrl;
-      
-      const initialSize = (page === 0 && !shareToken) ? 14 : 15;
+      const currentSize = 15; // Ваша правильна константа
 
       if (shareToken) {
         wishlistUrl = `http://localhost:8085/api/wishlists/share/${shareToken}`;
-        wishesUrl = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes?page=${page}&size=${initialSize}`;
+        // ВИПРАВЛЕНО: замінено initialSize на currentSize
+        wishesUrl = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes?page=${page}&size=${currentSize}`;
       } else {
         wishlistUrl = `http://localhost:8085/api/wishlists/${id}`;
-        wishesUrl = `http://localhost:8085/api/wishlists/${id}/wishes?page=${page}&size=${initialSize}&sort=id,desc`;
+        // ВИПРАВЛЕНО: замінено initialSize на currentSize
+        wishesUrl = `http://localhost:8085/api/wishlists/${id}/wishes?page=${page}&size=${currentSize}&sort=id,desc`;
       }
 
       const [wishlistResponse, wishesResponse] = await Promise.all([
@@ -88,7 +91,8 @@ export const WishlistDetails = () => {
         setIsOwner(true);
       }
       
-      if (page === 0 && calculatedIsOwner && initialSize === 15 && shareToken) {
+      // ВИПРАВЛЕНО: Перевірка умови також переведена на currentSize замість initialSize
+      if (page === 0 && calculatedIsOwner && currentSize === 15 && shareToken) {
         const correctWishesUrl = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes?page=${page}&size=14`;
         const correctWishesRes = await fetch(correctWishesUrl, { method: 'GET', headers });
         if (correctWishesRes.ok) {
@@ -107,7 +111,7 @@ export const WishlistDetails = () => {
     }
   };
 
-  // 2. Функція поширення (БЕЗ ДУБЛЮВАННЯ НАЗВИ)
+  // 2. Функція поширення
   const handleShare = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -189,17 +193,13 @@ export const WishlistDetails = () => {
     } catch (err) { console.error(err); }
   };
 
-  // --- ОБРОБНИКИ КЛІКІВ ДЛЯ МОДАЛКИ БРОНЮВАННЯ ---
   const handleReserveClick = (e, wish) => {
     e.preventDefault(); e.stopPropagation();
-    
-    // Перевірка на авторизацію користувача
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
       return;
     }
-
     setReserveModalConfig({
       show: true,
       mode: 'RESERVE',
@@ -210,14 +210,11 @@ export const WishlistDetails = () => {
 
   const handleJoinClick = (e, wish) => {
     e.preventDefault(); e.stopPropagation();
-    
-    // Перевірка на авторизацію користувача
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
       return;
     }
-
     setReserveModalConfig({
       show: true,
       mode: 'JOIN',
@@ -235,12 +232,9 @@ export const WishlistDetails = () => {
     }
   };
 
-  // Обробник натискання кнопки "Скасувати" на картці бажання
   const handleCancelClick = (e, wish) => {
     e.preventDefault(); 
     e.stopPropagation();
-    
-    // Беремо reservationId безпосередньо з об'єкта бажання
     setCancelModal({ 
       show: true, 
       wishId: wish.id, 
@@ -249,7 +243,6 @@ export const WishlistDetails = () => {
   };
 
   const handleCancelReservationConfirm = async () => {
-    // Перевіряємо наявність ID бронювання
     if (!cancelModal.reservationId) {
       alert("Не вдалося визначити ідентифікатор бронювання.");
       return;
@@ -270,12 +263,9 @@ export const WishlistDetails = () => {
       const resData = await response.json().catch(() => ({}));
 
       if (response.status === 200) {
-        // ІНТЕГРАЦІЯ З API: Обробка успішної відповіді сервера
         setWishes(prevWishes => 
           prevWishes.map(wish => {
             if (wish.id === cancelModal.wishId) {
-              
-              // Варіант 1: Користувач був останнім, групу повністю видалено
               if (resData.reservationId === null) {
                 return {
                   ...wish,
@@ -285,19 +275,16 @@ export const WishlistDetails = () => {
                   maxParticipants: null,
                   currentParticipants: null,
                   isCurrentUserParticipant: false,
-                  participantEmails: [] // Очищуємо список для сторінки деталей
+                  participantEmails: []
                 };
               } 
-              
-              // Варіант 2: У групі ще залишилися інші учасники
               return {
                 ...wish,
                 reservationId: resData.reservationId,
                 reservationType: resData.reservationType,
                 maxParticipants: resData.maxParticipants,
                 currentParticipants: resData.currentParticipants,
-                isCurrentUserParticipant: false, // Цей користувач успішно вийшов
-                // Якщо на бекенді є свой сесійний email, видаляємо його з масиву відображення (для детальної сторінки)
+                isCurrentUserParticipant: false,
                 participantEmails: wish.participantEmails 
                   ? wish.participantEmails.filter(email => email !== localStorage.getItem('userEmail')) 
                   : []
@@ -306,27 +293,16 @@ export const WishlistDetails = () => {
             return wish;
           })
         );
-
-        // Закриваємо модальне вікно
         setCancelModal({ show: false, wishId: null, reservationId: null });
-        
-        // Опціонально: робимо фоновий fetch для синхронізації з іншими компонентами, якщо необхідно
-        // fetchWishlistData(currentPage);
-
       } else if (response.status === 401) {
         alert(resData.message || "Увійдіть в обліковий запис");
         navigate('/login');
-      } else if (response.status === 403) {
-        alert(resData.message || "Доступ заборонено: ви не є учасником цього бронювання");
-        setCancelModal({ show: false, wishId: null, reservationId: null });
       } else {
-        // Обробка помилок 400, 404, 500
-        alert(resData.message || "Сталася неочікувана помилка при спробі покинути бронювання");
+        alert(resData.message || "Сталася помилка");
         setCancelModal({ show: false, wishId: null, reservationId: null });
       }
     } catch (err) {
-      console.error("Помилка мережі при скасуванні бронювання:", err);
-      alert("Сталася помилка з'єднання з сервером");
+      console.error(err);
     } finally {
       setIsCanceling(false);
     }
@@ -337,21 +313,10 @@ export const WishlistDetails = () => {
     return (
       <div className="error-page-wrapper">
         <div className="access-denied-container">
-          <svg 
-            className="ban-icon" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="1.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+          <svg className="ban-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
           </svg>
-          <p className="access-denied-text">
-            Ви не можете переглядати цей вішліст
-          </p>
+          <p className="access-denied-text">Ви не можете переглядати цей вішліст</p>
         </div>
       </div>
     );
@@ -395,7 +360,7 @@ export const WishlistDetails = () => {
       </p>
 
       {/* Сітка бажань */}
-      <div className="wishes-grid">
+      <div className="wishes-grid mb-5">
         {isOwner && currentPage === 0 && (
           <div className="wish-item-card add-new-card" onClick={() => navigate(`/wishlists/${id}/add-item`)}>
             <div className="wish-image-container d-flex align-items-center justify-content-center">
@@ -409,37 +374,32 @@ export const WishlistDetails = () => {
         {wishes.map((wish) => {
           const hasIndividualReservation = wish.isReserved === true && wish.reservationType === "INDIVIDUAL";
           const hasGroupReservation = wish.isReserved === true && wish.reservationType === "GROUP";
-          
           const currentParticipants = wish.currentParticipants || 0;
           const maxParticipants = wish.maxParticipants || 1;
           const isGroupFilled = currentParticipants >= maxParticipants;
           const isWishReserved = wish.isReserved === true;
 
-        return (
+          return (
             <div key={wish.id} className="wish-item-wrapper">
               <Link to={shareToken
                   ? `/wishlist/share/${shareToken}/wish/${wish.id}`
                   : `/wish-items/${wish.id}`} className="text-decoration-none text-dark h-100">
                 <div className="wish-item-card h-100 position-relative">
                   
-                  {/* Бейдж: Виконано */}
                   {wish.isCompleted && (
                     <div className="completed-badge" style={{ zIndex: 45 }}>
                       <i className="bi bi-check-lg me-1"></i> Виконано
                     </div>
                   )}
 
-                  {/* Логіка відображення маркерів бронювання згідно з ТЗ */}
                   {!wish.isCompleted && (
                     <>
-                      {/* Одиночне бронювання */}
                       {hasIndividualReservation && (
                         <div className="completed-badge reserved" style={{ zIndex: 45 }}>
                           <i className="bi bi-lock-fill me-1"></i> Заброньовано
                         </div>
                       )}
                       
-                      {/* Спільне/Групове бронювання */}
                       {hasGroupReservation && (
                         <div className="completed-badge reserved" style={{ zIndex: 45, backgroundColor: '#8A60C2' }}>
                           <i className="bi bi-lock-fill me-1"></i> Заброньовано: {currentParticipants} з {maxParticipants}
@@ -458,7 +418,7 @@ export const WishlistDetails = () => {
                          <div className="position-absolute shadow bg-white" style={{ top: '40px', right: '0px', zIndex: 110, borderRadius: '12px', minWidth: '160px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
                             <div className="d-flex flex-column text-start">
                               <div className="px-3 py-2 text-dark menu-hover-effect" 
-                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedWish(wish); setIsEditWishItemModalOpen(true); setActiveMenuId(null); }} 
+                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedWish(wish); setIsEditWishModalOpen(true); setActiveMenuId(null); }} 
                                    style={{ cursor: 'pointer', fontSize: '14px' }}>
                                 Редагувати
                               </div>
@@ -492,30 +452,12 @@ export const WishlistDetails = () => {
                         style={{ zIndex: 40 }}
                       >
                         {wish.isCompleted ? (
-                          <svg 
-                            width="20" 
-                            height="20" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="#8A60C2" 
-                            strokeWidth="2.8" 
-                            strokeLinecap="round"
-                            className="completed-flower"
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <line x1="12" y1="5" x2="12" y2="2" />
-                            <line x1="12" y1="22" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="2" y2="12" />
-                            <line x1="22" y1="12" x2="19" y2="12" />
-                            <line x1="17" y1="17" x2="19.1" y2="19.1" />
-                            <line x1="4.9" y1="4.9" x2="7" y2="7" />
-                            <line x1="17" y1="7" x2="19.1" y2="4.9" />
-                            <line x1="4.9" y1="19.1" x2="7" y2="17" />
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A60C2" strokeWidth="2.8" strokeLinecap="round" className="completed-flower" style={{ display: 'flex', alignItems: 'center', justifyCONtent: 'center' }}>
+                            <line x1="12" y1="5" x2="12" y2="2" /><line x1="12" y1="22" x2="12" y2="19" /><line x1="5" y1="12" x2="2" y2="12" /><line x1="22" y1="12" x2="19" y2="12" /><line x1="17" y1="17" x2="19.1" y2="19.1" /><line x1="4.9" y1="4.9" x2="7" y2="7" /><line x1="17" y1="7" x2="19.1" y2="4.9" /><line x1="4.9" y1="19.1" x2="7" y2="17" />
                           </svg>
                         ) : (
                           <i className="bi bi-check-lg"></i>
                         )}
-
                         <div className="custom-tooltip">
                           {wish.isCompleted ? "Повернути бажання в активний стан" : "Позначити бажання як виконане"}
                         </div>
@@ -526,21 +468,7 @@ export const WishlistDetails = () => {
                           {wish.isCurrentUserParticipant && hasGroupReservation ? (
                             <button
                               className="btn d-flex align-items-center justify-content-center"
-                              style={{ 
-                                width: '127px', 
-                                height: '32px', 
-                                borderRadius: '8px', 
-                                fontWeight: '500', 
-                                fontSize: '14px', 
-                                border: '1px solid rgba(220, 54, 46, 0.8)', 
-                                backgroundColor: 'rgba(244, 129, 124, 0.48)', 
-                                color: '#f5f5f5', 
-                                position: 'absolute', 
-                                bottom: '12px', 
-                                right: '12px', 
-                                zIndex: 10, 
-                                padding: '0'
-                              }}
+                              style={{ width: '127px', height: '32px', borderRadius: '8px', fontWeight: '500', fontSize: '14px', border: '1px solid rgba(220, 54, 46, 0.8)', backgroundColor: 'rgba(244, 129, 124, 0.48)', color: '#f5f5f5', position: 'absolute', bottom: '12px', right: '12px', zIndex: 10, padding: '0' }}
                               onClick={(e) => handleCancelClick(e, wish)}
                             >
                               Скасувати
@@ -550,22 +478,17 @@ export const WishlistDetails = () => {
                               {!isWishReserved && wish.reservationType !== "GROUP" && (
                                 <button
                                   className="btn d-flex align-items-center justify-content-center text-white"
-                                  style={{ width: '127px', height: '32px', borderRadius: '8px', fontWeight: '500', fontSize: '14px', border: '1px solid #8A60C2', 
-                                    backgroundColor: 'rgba(106, 69, 156, 0.52)', position: 'absolute', bottom: '12px', right: '12px', zIndex: 10, padding: '0'
-                                  }}
+                                  style={{ width: '127px', height: '32px', borderRadius: '8px', fontWeight: '500', fontSize: '14px', border: '1px solid #8A60C2', backgroundColor: 'rgba(106, 69, 156, 0.52)', position: 'absolute', bottom: '12px', right: '12px', zIndex: 10, padding: '0' }}
                                   onClick={(e) => handleReserveClick(e, wish)}
                                 >
                                   Забронювати
                                 </button>
                               )}
 
-                              {/* Сховано кнопку «Долучитися», якщо група заповнена (`!isGroupFilled`) */}
                               {hasGroupReservation && !isGroupFilled && (
                                 <button
                                   className="btn d-flex align-items-center justify-content-center text-white"
-                                  style={{ width: '127px', height: '32px', borderRadius: '8px', fontWeight: '500', fontSize: '14px', border: '1px solid #8A60C2', 
-                                    backgroundColor: 'rgba(106, 69, 156, 0.52)', position: 'absolute', bottom: '12px', right: '12px', zIndex: 10, padding: '0'
-                                  }}
+                                  style={{ width: '127px', height: '32px', borderRadius: '8px', fontWeight: '500', fontSize: '14px', border: '1px solid #8A60C2', backgroundColor: 'rgba(106, 69, 156, 0.52)', position: 'absolute', bottom: '12px', right: '12px', zIndex: 10, padding: '0' }}
                                   onClick={(e) => handleJoinClick(e, wish)}
                                 >
                                   Долучитися
@@ -587,9 +510,62 @@ export const WishlistDetails = () => {
             </div>
           );
         })}
-      </div>
+        {currentPage === 0 && (
+        <div 
+          className="d-flex align-items-center justify-content-between px-5 position-relative overflow-hidden shadow-sm animate-fade-in" 
+          style={{ 
+            background: 'linear-gradient(93.28deg, #E8EEFF 0%, #F3F7FF 100%)', 
+            borderRadius: '24px', 
+            border: '1px dashed rgba(138, 96, 194, 0.25)',
+            width: '1116px',        // Займає рівно 100% ширини за рівнем карток
+            height: '320px',      // Зберігаємо пропорційну висоту з вашого макета
+            marginBottom: '3rem'
+          }}
+        >
+          {/* Текстовий контент */}
+          <div className="d-flex flex-column justify-content-center text-start position-relative" style={{ zIndex: 5, maxWidth: '60%' }}>
+            <h3 className="fw-bold mb-2" style={{ color: '#7E53C5', fontFamily: 'Raleway, sans-serif', fontSize: '2.1rem', letterSpacing: '-0.02em' }}>
+              Це лише початок...
+            </h3>
+            <p className="m-0 text-secondary" style={{ fontSize: '1.25rem', fontWeight: '500', opacity: 0.85 }}>
+              Зустрінемося на наступній сторінці
+            </p>
+          </div>
 
-      {/* ОНОВЛЕНИЙ КОМПОНЕНТ ДЛЯ ОБОХ ТИПІВ МОДАЛОК */}
+          {/* SVG Комети з автоматичним масштабуванням до правого краю */}
+          <div className="position-absolute end-0 top-0 bottom-0 h-100 w-100 pointer-events-none" style={{ zIndex: 1, overflow: 'hidden' }}>
+            <svg className="w-100 h-100" viewBox="0 0 831 347" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid slice">
+              <path d="M690,175 Q420,110 180,220 Q480,200 300,280 Q480,200 690,175 Z" fill="url(#cometGradient)" opacity="0.85"/>
+              <path d="M710,175 Q460,70 220,150 Q520,140 360,190 Q520,140 710,175 Z" fill="url(#cometGradient)" opacity="0.6"/>
+              
+              <g fill="#FFFFFF" opacity="0.9">
+                <path d="M 310 190 L 314 194 L 310 198 L 306 194 Z" />
+                <path d="M 420 135 L 424 139 L 420 143 L 416 139 Z" />
+                <path d="M 550 150 L 554 154 L 550 158 L 546 154 Z" />
+                <path d="M 610 210 L 613 213 L 610 216 L 607 213 Z" />
+              </g>
+              
+              <defs>
+                <linearGradient id="cometGradient" x1="180" y1="200" x2="700" y2="175" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#A682FF" stopOpacity="0"/>
+                  <stop offset="55%" stopColor="#966FD6" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#7E53C5" stopOpacity="0.85"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          {/* Головна акцентна зірка, чітко притиснута до правого краю банера */}
+          <div className="position-absolute end-0 top-50 translate-middle-y me-5 d-flex align-items-center justify-content-center" style={{ zIndex: 3, width: '160px', height: '160px' }}>
+            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 0 L54 36 L90 14 L62 42 L100 50 L62 58 L90 86 L54 64 L50 100 L46 64 L10 86 L38 58 L0 50 L38 42 L10 14 L46 36 Z" fill="#7E53C5" />
+            </svg>
+          </div>
+        </div>
+      )}
+      </div>
+      
+      {/* Модалки та інші компоненти */}
       <ReserveWishModal 
         show={reserveModalConfig.show}
         initialMode={reserveModalConfig.mode}
@@ -622,7 +598,6 @@ export const WishlistDetails = () => {
         </div>
       )}
 
-      {/* --- ДОДАНИЙ БЛОК ПОВІДОМЛЕННЯ --- */}
       {showToast && (
         <div className="toast-container-fixed">
           <div className="custom-toast-v2 d-flex align-items-center justify-content-center shadow-sm">
@@ -631,7 +606,6 @@ export const WishlistDetails = () => {
         </div>
       )}
 
-      {/* Модалки */}
       <EditWishlistModal 
         show={isEditListModalOpen}
         wishlistData={wishlist}
