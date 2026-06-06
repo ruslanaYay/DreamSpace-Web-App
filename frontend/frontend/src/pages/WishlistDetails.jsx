@@ -510,7 +510,7 @@ export const WishlistDetails = () => {
             </div>
           );
         })}
-        {currentPage === 0 && (
+        {currentPage === 0 && !shareToken && (
         <div 
           className="d-flex align-items-center justify-content-between px-5 position-relative overflow-hidden shadow-sm animate-fade-in" 
           style={{ 
