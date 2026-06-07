@@ -156,41 +156,48 @@ export const WishItemDetails = () => {
   };
 
   const handleCancelReservation = async () => {
-    if (isCanceling || !item || !item.reservationId) return;
-    setIsCanceling(true);
+  if (isCanceling || !item || !item.reservationId) return;
+  setIsCanceling(true);
 
-    const authToken = localStorage.getItem('token');
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`
-    };
-
-    try {
-      const url = item.reservationType === 'GROUP'
-          ? `http://localhost:8085/api/reservations/${item.reservationId}/leave`
-          : `http://localhost:8085/api/reservations/${item.reservationId}`;
-
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: headers
-      });
-
-      const resData = await response.json().catch(() => ({}));
-
-      if (response.ok) {
-        setShowCancelModal(false);
-        fetchWishData(); 
-      } else {
-        alert(resData.message || "Сталася помилка при скасуванні участі");
-        setShowCancelModal(false);
-      }
-    } catch (err) {
-      console.error("Помилка при скасуванні участі:", err);
-      alert("Не вдалося з'єднатися з сервером");
-    } finally {
-      setIsCanceling(false);
-    }
+  const authToken = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${authToken}`
   };
+
+  try {
+    const url = item.reservationType === 'GROUP'
+        ? `http://localhost:8085/api/reservations/${item.reservationId}/leave`
+        : `http://localhost:8085/api/reservations/${item.reservationId}`;
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: headers
+    });
+
+    const resData = await response.json().catch(() => ({}));
+
+    if (response.ok) {
+      setShowCancelModal(false);
+
+      // ЯКЩО ПРИЙШЛИ ЗІ СТОРІНКИ /booked — ПОВЕРТАЄМОСЬ ТУДИ
+      if (isFromBooked) {
+        navigate('/booked'); // Або navigate(-1), якщо хочете повернути на попередній екран в історії
+      } else {
+        // Якщо скасували, перебуваючи на сторінці гостя за share-лінк, просто оновлюємо дані картки
+        fetchWishData(); 
+      }
+    } else {
+      alert(resData.message || "Сталася помилка при скасуванні участі");
+      setShowCancelModal(false);
+    }
+  } catch (err) {
+    console.error("Помилка при скасуванні участі:", err);
+    alert("Не вдалося з'єднатися з сервером");
+  } finally {
+    setIsCanceling(false);
+  }
+};
 
   const handleReserveClick = () => {
     const authToken = localStorage.getItem('token');
