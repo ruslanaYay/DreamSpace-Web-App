@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { EditWishItemModal } from '../components/EditWishItemModal';
 import { DeleteWishModal } from '../components/DeleteWishModal';
 import { ReserveWishModal } from '../components/ReserveWishlistModal';
+import { CancelReservationModal } from '../components/CancelReservationModal'; 
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export const WishItemDetails = () => {
@@ -20,14 +21,11 @@ export const WishItemDetails = () => {
   const [deleteModal, setDeleteModal] = useState({ show: false });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Стан для модального вікна бронювання гостем
+  // Стан для відображення інтегрованого ReserveWishModal
   const [showReserveModal, setShowReserveModal] = useState(false);
-  const [reserveMode, setReserveMode] = useState('INDIVIDUAL');
-  const [participantEmail, setParticipantEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [isReserving, setIsReserving] = useState(false);
+  const [reserveModalMode, setReserveModalMode] = useState('RESERVE'); // 'RESERVE' або 'JOIN'
 
-  // Стан для скасування спільного бронювання
+  // Стан для скасування спільного/одиночного бронювання
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
 
@@ -141,84 +139,7 @@ export const WishItemDetails = () => {
     } catch (err) { console.error(err); }
   };
 
-  const handleConfirmReservation = async () => {
-    if (isReserving || !itemId) return;
-    setEmailError("");
-
-    const authToken = localStorage.getItem('token');
-    
-    if (!authToken) {
-      alert("Увійдіть в обліковий запис");
-      setShowReserveModal(false);
-      navigate('/login', { state: { from: location.pathname + location.search } });
-      return;
-    }
-
-    if (reserveMode === 'JOIN_GROUP') {
-      if (!participantEmail.trim()) {
-        setEmailError("Поле email обов'язкове для заповнення");
-        return;
-      }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(participantEmail)) {
-        setEmailError("Некоректна адреса електронної пошти");
-        return;
-      }
-    }
-
-    setIsReserving(true);
-
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`
-    };
-
-    try {
-      let url;
-      let options = { headers, method: 'POST' };
-
-      if (reserveMode === 'JOIN_GROUP') {
-        url = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes/${itemId}/join`;
-        options.body = JSON.stringify({ email: participantEmail });
-      } else {
-        url = shareToken 
-          ? `http://localhost:8085/api/wishlists/share/${shareToken}/wishes/${itemId}/reserve`
-          : `http://localhost:8085/api/wishes/${itemId}/reserve`;
-        options.body = JSON.stringify({
-          reservationType: "INDIVIDUAL",
-          maxParticipants: 1,
-          email: null
-        });
-      }
-
-      const response = await fetch(url, options);
-      const resData = await response.json().catch(() => ({}));
-
-      if (response.ok) {
-        setShowReserveModal(false);
-        setParticipantEmail("");
-        fetchWishData();
-      } else {
-        if (resData.email) {
-          setEmailError(resData.email);
-        } else {
-          alert(resData.message || "Сталася неочікувана помилка");
-          setShowReserveModal(false);
-        }
-        
-        if (response.status === 400 || response.status === 404) {
-          fetchWishData();
-        }
-      }
-    } catch (err) {
-      console.error("Помилка при бронюванні:", err);
-      alert("Не вдалося з'єднатися з сервером");
-    } finally {
-      setIsReserving(false);
-    }
-  };
-
-  // Ендпоінт відповідно до бекенд ТЗ: DELETE /api/reservations/{reservationId}/leave
+  // Скасування участі у бронюванні через API
   const handleCancelReservation = async () => {
     if (isCanceling || !item || !item.reservationId) return;
     setIsCanceling(true);
@@ -241,7 +162,7 @@ export const WishItemDetails = () => {
 
       if (response.ok) {
         setShowCancelModal(false);
-        fetchWishData(); // Свіжі дані з сервера (лічильник оновиться, пошта прибереться)
+        fetchWishData(); // Оновлюємо дані, щоб прибрати плашки бронювання
       } else {
         alert(resData.message || "Сталася помилка при скасуванні участі");
         setShowCancelModal(false);
@@ -259,7 +180,7 @@ export const WishItemDetails = () => {
     if (!authToken) {
       navigate('/login', { state: { from: location.pathname + location.search } });
     } else {
-      setReserveMode('INDIVIDUAL');
+      setReserveModalMode('RESERVE');
       setShowReserveModal(true);
     }
   };
@@ -269,9 +190,7 @@ export const WishItemDetails = () => {
     if (!authToken) {
       navigate('/login', { state: { from: location.pathname + location.search } });
     } else {
-      setReserveMode('JOIN_GROUP');
-      setEmailError("");
-      setParticipantEmail("");
+      setReserveModalMode('JOIN');
       setShowReserveModal(true);
     }
   };
@@ -464,7 +383,7 @@ export const WishItemDetails = () => {
                     </div>
                   )}
 
-                  {/* Умова `!isGroupFilled`: Кнопка «Долучитися» ховається, якщо група заповнена */}
+                  {/* Умова !isGroupFilled: Кнопка «Долучитися» ховається, якщо група заповнена */}
                   {hasGroupReservation && !isGroupFilled && !item.isCurrentUserParticipant && (
                     <button
                       className="btn mt-2 w-100 d-flex align-items-center justify-content-center text-white"
@@ -475,8 +394,8 @@ export const WishItemDetails = () => {
                     </button>
                   )}
 
-                  {/* Кнопка «Скасувати бронювання» */}
-                  {hasGroupReservation && item.isCurrentUserParticipant && (
+                  {/* Кнопка «Скасувати бронювання» або одиночне скасування */}
+                  {((hasGroupReservation && item.isCurrentUserParticipant) || (hasIndividualReservation && item.isCurrentUserParticipant)) && (
                     <button
                       className="btn mt-2 w-100 d-flex align-items-center justify-content-center border-0"
                       style={{ 
@@ -499,121 +418,28 @@ export const WishItemDetails = () => {
           </div>
         </div>
 
-        {/* МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ БРОНЮВАННЯ ТА ДОЛУЧЕННЯ */}
-        {showReserveModal && (
-          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
-               style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 1050 }}
-               onClick={() => !isReserving && setShowReserveModal(false)}>
-            <div className="bg-white position-relative shadow d-flex flex-column align-items-center justify-content-between p-4" 
-                 style={{ width: '576px', minHeight: '209px', height: 'auto', borderRadius: '16px', gap: '20px' }}
-                 onClick={(e) => e.stopPropagation()}>
-              
-              <button className="btn border-0 position-absolute p-1 bg-transparent" 
-                      style={{ right: '20px', top: '16px' }}
-                      disabled={isReserving}
-                      onClick={() => setShowReserveModal(false)}>
-                <i className="bi bi-x-lg text-muted" style={{ fontSize: '1.1rem' }}></i>
-              </button>
+        {/* МОДАЛЬНЕ ВІКНО СТВОРЕННЯ/ДОЛУЧЕННЯ ДО БРОНЮВАННЯ */}
+        <ReserveWishModal
+          show={showReserveModal}
+          initialMode={reserveModalMode}
+          wishId={itemId}
+          shareToken={shareToken}
+          selectedWish={item}
+          onClose={() => setShowReserveModal(false)}
+          onSuccess={() => {
+            setShowReserveModal(false);
+            fetchWishData(); 
+          }}
+        />
 
-              <div className="w-100 text-center mt-2">
-                <h4 className="fw-bold mb-2" style={{ color: '#4C4C4C', fontSize: '24px', lineHeight: '29px' }}>
-                  {reserveMode === 'JOIN_GROUP' ? 'Долучитися до бронювання' : 'Бронювання бажання'}
-                </h4>
-                <p className="mb-0 mx-auto" style={{ color: '#000000', fontSize: '14px', lineHeight: '22px', maxWidth: '480px' }}>
-                  {reserveMode === 'JOIN_GROUP' 
-                    ? `${item.initiatorEmail || 'Користувач'} відкрив спільне бронювання для ${maxParticipants} осіб. Бажаєте долучитися?`
-                    : 'Ви впевнені, що хочете забронювати це бажання? Інші користувачі більше не зможуть його обрати.'}
-                </p>
-              </div>
-
-              {reserveMode === 'JOIN_GROUP' && (
-                <div className="w-100 px-3 text-start">
-                  <label className="form-label fw-semibold text-muted" style={{ fontSize: '13px' }}>Електронна адреса *</label>
-                  <input 
-                    type="email" 
-                    className={`form-index-input form-control shadow-none ${emailError ? 'is-invalid' : ''}`}
-                    style={{ height: '40px', borderRadius: '8px' }}
-                    placeholder="Введіть ваш email"
-                    value={participantEmail}
-                    disabled={isReserving}
-                    onChange={(e) => { setParticipantEmail(e.target.value); setEmailError(""); }}
-                  />
-                  {emailError && (
-                    <div className="invalid-feedback d-block mt-1 fw-medium" style={{ fontSize: '12px' }}>
-                      {emailError}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="d-flex justify-content-between w-100 px-3 mb-2" style={{ height: '40px' }}>
-                <button className="btn border-0 d-flex align-items-center justify-content-center" 
-                        style={{ width: '240px', height: '40px', backgroundColor: '#E6E6E6', color: '#757575', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                        disabled={isReserving}
-                        onClick={() => setShowReserveModal(false)}>
-                  Скасувати
-                </button>
-                <button className="btn d-flex align-items-center justify-content-center border-0" 
-                        style={{ width: '240px', height: '40px', backgroundColor: '#8A60C2', color: '#F5F5F5', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                        disabled={isReserving}
-                        onClick={handleConfirmReservation}>
-                  {isReserving ? (
-                    <div className="spinner-border spinner-border-sm text-light"></div>
-                  ) : (
-                    'Підтвердити'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* МОДАЛЬНЕ ВІКНО СКАСУВАННЯ БРОНЮВАННЯ */}
-        {showCancelModal && (
-          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
-               style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 1050 }}
-               onClick={() => !isCanceling && setShowCancelModal(false)}>
-            <div className="bg-white position-relative shadow d-flex flex-column align-items-center justify-content-between p-4" 
-                 style={{ width: '576px', minHeight: '209px', height: 'auto', borderRadius: '16px', gap: '20px' }}
-                 onClick={(e) => e.stopPropagation()}>
-              
-              <button className="btn border-0 position-absolute p-1 bg-transparent" 
-                      style={{ right: '20px', top: '16px' }}
-                      disabled={isCanceling}
-                      onClick={() => setShowCancelModal(false)}>
-                <i className="bi bi-x-lg text-muted" style={{ fontSize: '1.1rem' }}></i>
-              </button>
-
-              <div className="w-100 text-center mt-2">
-                <h4 className="fw-bold mb-2" style={{ color: '#4C4C4C', fontSize: '24px', lineHeight: '29px' }}>
-                  Скасування бронювання
-                </h4>
-                <p className="mb-0 mx-auto" style={{ color: '#000000', fontSize: '14px', lineHeight: '22px', maxWidth: '480px' }}>
-                  Ви впевнені, що хочете скасувати бронювання цього бажання?
-                </p>
-              </div>
-
-              <div className="d-flex justify-content-between w-100 px-3 mb-2" style={{ height: '40px' }}>
-                <button className="btn border-0 d-flex align-items-center justify-content-center" 
-                        style={{ width: '240px', height: '40px', backgroundColor: '#E6E6E6', color: '#757575', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                        disabled={isCanceling}
-                        onClick={() => setShowCancelModal(false)}>
-                  Скасувати
-                </button>
-                <button className="btn d-flex align-items-center justify-content-center border-0" 
-                        style={{ width: '240px', height: '40px', backgroundColor: '#8A60C2', color: '#F5F5F5', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}
-                        disabled={isCanceling}
-                        onClick={handleCancelReservation}>
-                  {isCanceling ? (
-                    <div className="spinner-border spinner-border-sm text-light"></div>
-                  ) : (
-                    'Підтвердити'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* НОВЕ ІНТЕГРОВАНЕ МОДАЛЬНЕ ВІКНО СКАСУВАННЯ БРОНЮВАННЯ */}
+        <CancelReservationModal
+          show={showCancelModal}
+          reservationType={item.reservationType} // 'INDIVIDUAL' або 'GROUP'
+          isLoading={isCanceling}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={handleCancelReservation}
+        />
 
         {isOwner && (
             <>
