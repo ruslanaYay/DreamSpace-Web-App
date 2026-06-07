@@ -254,112 +254,89 @@ export const WishlistDetails = () => {
 };
 
   const handleCancelReservationConfirm = async () => {
-  const currentWish = wishes.find(w => w.id === cancelModal.wishId) || {};
-  
-  const actualReservationId = cancelModal.reservationId 
-    || currentWish.reservationId 
-    || currentWish.reservation?.id 
-    || currentWish.reservation?.reservationId;
-
-  if (!actualReservationId || actualReservationId === "undefined" || actualReservationId === "null") {
-    alert(`Критична помилка:\nНе вдалося отримати ID бронювання.`);
-    return;
-  }
-  
-  setIsCanceling(true);
-  const token = localStorage.getItem('token');
-  const isGroup = cancelModal.reservationType === "GROUP";
-
-  const url = isGroup 
-    ? `http://localhost:8085/api/reservations/${actualReservationId}/leave`
-    : `http://localhost:8085/api/reservations/${actualReservationId}`;
-
-  try {
-    console.log("=== ЗАПУСК СКАСУВАННЯ ===");
-    console.log("URL запиту:", url);
+    const currentWish = wishes.find(w => w.id === cancelModal.wishId) || {};
     
-    const headers = {
-      'Authorization': `Bearer ${token}`
-    };
+    const actualReservationId = cancelModal.reservationId 
+      || currentWish.reservationId 
+      || currentWish.reservation?.id 
+      || currentWish.reservation?.reservationId;
 
-    if (isGroup) {
-      headers['Content-Type'] = 'application/json';
-    }
-
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: headers
-    });
-
-    console.log("Статус відповіді сервера:", response.status);
-
-    // --- 1. ОБРОБКА СТАТУСІВ ПОМИЛОК ---
-    if (response.status === 401) {
-      alert("Увійдіть в обліковий запис для виконання цієї дії.");
-      navigate('/login');
+    if (!actualReservationId || actualReservationId === "undefined" || actualReservationId === "null") {
+      alert(`Критична помилка:\nНе вдалося отримати ID бронювання.`);
       return;
     }
+    
+    setIsCanceling(true);
+    const token = localStorage.getItem('token');
+    const isGroup = cancelModal.reservationType === "GROUP";
 
-    if (response.status === 403) {
-      let serverMessage = "Доступ заборонено (Ви не є ініціатором цього бронювання)";
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        try { const errData = await response.json(); serverMessage = errData.message || serverMessage; } catch (e) {}
+    const url = isGroup 
+      ? `http://localhost:8085/api/reservations/${actualReservationId}/leave`
+      : `http://localhost:8085/api/reservations/${actualReservationId}`;
+
+    try {
+      console.log("=== ЗАПУСК СКАСУВАННЯ ===");
+      console.log("ID Бронювання:", actualReservationId);
+      console.log("Тип:", cancelModal.reservationType);
+      console.log("URL запиту:", url);
+      
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      };
+
+      // Для DELETE-запиту без тіла Content-Type краще не передавати взагалі,
+      // але якщо Spring Boot очікує його для групового /leave:
+      if (isGroup) {
+        headers['Content-Type'] = 'application/json';
       }
-      alert(`Помилка 403 Forbidden!\n${serverMessage}`);
-      setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
-      return;
-    }
 
-    if (response.status === 404) {
-      alert("Бронювання не знайдено на сервері (можливо, воно вже скасовано).");
-      setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
-      return;
-    }
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: headers
+      });
 
-    // Якщо сервер повернув будь-яку іншу помилку (наприклад, 400 чи 500)
-    if (!response.ok) {
-      let finalErrorText = "Неочікувана помилка сервера";
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        try { const errBody = await response.json(); finalErrorText = errBody.message || finalErrorText; } catch(e) {}
+      console.log("Статус відповіді сервера:", response.status);
+
+      // --- 1. ОБРОБКА СТАТУСІВ ПОМИЛОК ---
+      if (response.status === 401) {
+        alert("Увійдіть в обліковий запис для виконання цієї дії.");
+        navigate('/login');
+        return;
       }
-      alert(`Помилка сервера!\nСтатус: ${response.status}\n${finalErrorText}`);
-      setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
-      return;
-    }
 
-    // --- 2. УСПІШНЕ ІНДИВІДУАЛЬНЕ СКАСУВАННЯ (Бекенд повертає 204 No Content) ---
-    if (!isGroup || response.status === 204) {
-      // Тут ми ВЗАГАЛІ НЕ ВИКЛИКАЄМО response.json(), тому парсити нічого не буде!
-      setWishes(prevWishes => 
-        prevWishes.map(wish => {
-          if (wish.id === cancelModal.wishId) {
-            return {
-              ...wish,
-              isReserved: false,
-              reservationId: null,
-              reservationType: null,
-              maxParticipants: null,
-              currentParticipants: null,
-              isCurrentUserParticipant: false,
-              participantEmails: []
-            };
-          }
-          return wish;
-        })
-      );
-      setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
-      return;
-    }
+      if (response.status === 403) {
+        let serverMessage = "Доступ заборонено (Ви не є ініціатором цього бронювання)";
+        try {
+          const errData = await response.json();
+          serverMessage = errData.message || serverMessage;
+        } catch (e) {}
+        alert(`Помилка 403 Forbidden!\n${serverMessage}`);
+        setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
+        return;
+      }
 
-    // --- 3. УСПІШНЕ СПІЛЬНЕ СКАСУВАННЯ (Бекенд повертає 200 OK з DTO) ---
-    if (isGroup && response.status === 200) {
-      const resData = await response.json(); // Викликаємо лише тут, де точно є JSON
+      if (response.status === 404) {
+        alert("Бронювання не знайдено на сервері (можливо, воно вже скасовано).");
+        setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
+        return;
+      }
 
-      setWishes(prevWishes => 
-        prevWishes.map(wish => {
-          if (wish.id === cancelModal.wishId) {
-            // Якщо ініціатор вийшов і бекенд очистив або повернув пусті поля
-            if (!resData || !resData.id) {
+      if (!response.ok) {
+        let finalErrorText = "Неочікувана помилка сервера";
+        try {
+          const errBody = await response.json();
+          finalErrorText = errBody.message || finalErrorText;
+        } catch(e) {}
+        alert(`Помилка сервера!\nСтатус: ${response.status}\n${finalErrorText}`);
+        setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
+        return;
+      }
+
+      // --- 2. УСПІШНЕ ІНДИВІДУАЛЬНЕ СКАСУВАННЯ (Бекенд повернув 204 No Content) ---
+      if (!isGroup) {
+        setWishes(prevWishes => 
+          prevWishes.map(wish => {
+            if (wish.id === cancelModal.wishId) {
               return {
                 ...wish,
                 isReserved: false,
@@ -370,35 +347,62 @@ export const WishlistDetails = () => {
                 isCurrentUserParticipant: false,
                 participantEmails: []
               };
-            } 
-            
-            // Оновлюємо стан для інших учасників групи
-            return {
-              ...wish,
-              reservationId: resData.id,
-              reservationType: resData.reservationType,
-              maxParticipants: resData.maxParticipants,
-              currentParticipants: resData.currentParticipants,
-              isCurrentUserParticipant: false,
-              participantEmails: wish.participantEmails 
-                ? wish.participantEmails.filter(email => email !== localStorage.getItem('userEmail')) 
-                : []
-            };
-          }
-          return wish;
-        })
-      );
-      setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
-      return;
-    }
+            }
+            return wish;
+          })
+        );
+        setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
+        return;
+      }
 
-  } catch (err) {
-    console.error("Критична помилка на фронтенді:", err);
-    alert("Сталася помилка при обробці запиту.");
-  } finally {
-    setIsCanceling(false);
-  }
-};
+      // --- 3. УСПІШНЕ СПІЛЬНЕ СКАСУВАННЯ (Бекенд повернув 200 OK з об'єктом DTO) ---
+      if (isGroup && response.status === 200) {
+        const resData = await response.json();
+
+        setWishes(prevWishes => 
+          prevWishes.map(wish => {
+            if (wish.id === cancelModal.wishId) {
+              // Якщо останній учасник вийшов із групи, бекенд видалив Reservation і повернув id = null
+              if (!resData.id || resData.id === null) {
+                return {
+                  ...wish,
+                  isReserved: false,
+                  reservationId: null,
+                  reservationType: null,
+                  maxParticipants: null,
+                  currentParticipants: null,
+                  isCurrentUserParticipant: false,
+                  participantEmails: []
+                };
+              } 
+              
+              // Якщо в групі ще хтось залишився, оновлюємо лічильники й прибираємо свій email
+              return {
+                ...wish,
+                reservationId: resData.id,
+                reservationType: resData.reservationType,
+                maxParticipants: resData.maxParticipants,
+                currentParticipants: resData.currentParticipants,
+                isCurrentUserParticipant: false,
+                participantEmails: wish.participantEmails 
+                  ? wish.participantEmails.filter(email => email !== localStorage.getItem('userEmail')) 
+                  : []
+              };
+            }
+            return wish;
+          })
+        );
+        setCancelModal({ show: false, wishId: null, reservationId: null, reservationType: null });
+        return;
+      }
+
+    } catch (err) {
+      console.error("Критична помилка на фронтенді:", err);
+      alert("Не вдалося зв'язатися з сервером. Перевірте з'єднання.");
+    } finally {
+      setIsCanceling(false);
+    }
+  };
   
   if (loading && !wishlist) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
   if (error === 'Вішліст не знайдено або доступ заборонено' || error === 'Вішліст не знайдено') {
