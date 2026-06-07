@@ -78,4 +78,28 @@ public class ReservationService {
             );
         }
     }
+    @Transactional
+    public void cancelReservation(Long reservationId) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            throw new AccessDeniedException("Увійдіть в обліковий запис"); // Поверне 401/403 (залежно від налаштувань)
+        }
+
+
+        String currentEmail = authentication.getName();
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new UserNotFoundException());
+
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException("Бронювання не знайдено"));
+
+
+        if (!reservation.getInitiator().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Доступ заборонено"); // Поверне 403 Forbidden
+        }
+
+        reservationRepository.delete(reservation);
+    }
 }

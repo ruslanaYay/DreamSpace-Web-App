@@ -18,9 +18,21 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
+    // Твій старий метод для виходу з групового бронювання (залишається без змін)
     @DeleteMapping("/{reservationId}/leave")
     public ResponseEntity<ReservationResponseDTO> leaveReservation(@PathVariable Long reservationId) {
         ReservationResponseDTO response = reservationService.leaveReservation(reservationId);
         return ResponseEntity.ok(response);
+    }
+
+
+    @DeleteMapping("/{reservationId}")
+    public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
+
+
+        reservationService.cancelReservation(reservationId);
+
+
+        return ResponseEntity.noContent().build();
     }
 }

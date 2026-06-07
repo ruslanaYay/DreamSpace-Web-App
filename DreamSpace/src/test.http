@@ -162,3 +162,90 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWFuYS5pdXp5Zm92eWNoQG51c
   "privacyStatus": "LINK",
   "showBooked": false
 }
+
+
+
+### 1. Авторизація (Логін, щоб отримати токен)
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "mariia.berdnyk1@nure.ua",
+  "password": "01234567"
+}
+
+> {%
+    // Цей скрипт автоматично збереже токен з відповіді, щоб не копіювати його вручну
+    client.global.set("auth_token", response.body.token);
+%}
+
+### =========================================
+
+### 2. Запит як ВЛАСНИК (з передачею токена)
+# Очікуємо в самому кінці JSON відповіді: "isOwner": true
+GET http://localhost:8085/api/wishlists/share/d545a711-cb27-4819-b106-b15ae31a5ba6
+Authorization: Bearer {{auth_token}}
+
+### =========================================
+
+### 3. Запит як ГІСТЬ (БЕЗ передачі токена)
+# Очікуємо в самому кінці JSON відповіді: "isOwner": false
+GET http://localhost:8085/api/wishlists/share/d545a711-cb27-4819-b106-b15ae31a5ba6
+
+
+### ==========================================
+### 0. ПОЧАТОК: ЛОГІН (Щоб отримати токен)
+### ==========================================
+# Відправ цей запит, щоб залогінитися під своїм тестовим користувачем.
+# (Якщо у вас інший URL для логіну — підстав свій, наприклад /api/auth/login)
+POST http://localhost:8085/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "new.user123@gmail.com",
+  "password": "твоя_пароль_тут"
+}
+
+###
+# 🔴 ВАЖЛИВО: Скопіюй отриманий після логіну токен і встав його сюди замість тексту:
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzgwNzg5NzEzLCJleHAiOjE3ODA4NzYxMTN9.k234UZvB53wIVCQAFqezH5PHizO_5I9HYEf7Aqcl56w
+
+
+### ==========================================
+### Сценарій 1: Успішне скасування бронювання (Очікуємо 204)
+### ==========================================
+# 🔍 Знайди в базі ID індивідуального бронювання, яке належить твоєму юзеру (наприклад, id = 1)
+DELETE http://localhost:8085/api/reservations/1
+Authorization: Bearer {{token}}
+
+
+### ==========================================
+### Сценарій 2: Помилка авторизації (Очікуємо 401 або 403)
+### ==========================================
+# Робимо запит БЕЗ заголовка Authorization (без токена)
+DELETE http://localhost:8085/api/reservations/1
+
+# 🎯 Очікувана відповідь сервера: Status 401 або 403
+# Body: { "message": "Увійдіть в обліковий запис" }
+
+
+### ==========================================
+### Сценарій 3: Спроба скасувати чуже бронювання (Очікуємо 403)
+### ==========================================
+# 🔍 Підстав ID бронювання, яке в базі належить ІНШОМУ користувачу (наприклад, id = 2)
+DELETE http://localhost:8085/api/reservations/1
+Authorization: Bearer {{token}}
+
+# 🎯 Очікувана відповідь сервера: Status 403 Forbidden
+# Body: { "message": "Доступ заборонено" }
+
+
+### ==========================================
+### Сценарій 4: Бронювання не знайдено (Очікуємо 404)
+### ==========================================
+# Передаємо ID, якого точно немає в базі даних (наприклад, 999999)
+DELETE http://localhost:8085/api/reservations/999999
+Authorization: Bearer {{token}}
+
+# 🎯 Очікувана відповідь сервера: Status 404 Not Found
+# Body: { "message": "Бронювання не знайдено" }
