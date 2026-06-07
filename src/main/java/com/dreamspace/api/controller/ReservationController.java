@@ -1,6 +1,7 @@
 package com.dreamspace.api.controller;
 
 import com.dreamspace.api.dto.ReservationResponseDTO;
+import com.dreamspace.api.dto.WishResponseDTO;
 import com.dreamspace.api.service.ReservationService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,11 @@ public class ReservationController {
 
         Page<ReservationResponseDTO> response = reservationService.getMyReservations(page, size);
 
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/my/wishes/{wishId}")
+    public ResponseEntity<WishResponseDTO> getReservedWishDetails(@PathVariable Long wishId) {
+        WishResponseDTO response = reservationService.getReservedWishDetails(wishId);
         return ResponseEntity.ok(response);
     }
 }

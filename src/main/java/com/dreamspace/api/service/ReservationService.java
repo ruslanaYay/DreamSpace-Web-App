@@ -1,29 +1,29 @@
 package com.dreamspace.api.service;
 
 import com.dreamspace.api.dto.ReservationResponseDTO;
-import com.dreamspace.api.entity.Reservation;
-import com.dreamspace.api.entity.ReservationParticipant;
-import com.dreamspace.api.entity.User;
+import com.dreamspace.api.dto.WishResponseDTO;
+import com.dreamspace.api.entity.*;
+import com.dreamspace.api.enums.PrivacyStatus;
 import com.dreamspace.api.enums.ReservationType;
-import com.dreamspace.api.exception.AccessDeniedException;
-import com.dreamspace.api.exception.BadRequestException;
-import com.dreamspace.api.exception.ReservationNotFoundException;
-import com.dreamspace.api.exception.UserNotFoundException;
+import com.dreamspace.api.exception.*;
 import com.dreamspace.api.repository.ReservationRepository;
 import com.dreamspace.api.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.dreamspace.api.mapper.WishResponseMapper;
 
 @Service
 public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final WishResponseMapper wishResponseMapper;
 
-    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository) {
+    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, WishResponseMapper wishResponseMapper) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
+        this.wishResponseMapper = wishResponseMapper;
     }
 
     @Transactional
@@ -138,5 +138,24 @@ public class ReservationService {
                     currentParticipantsCount
             );
         });
+    }
+    public WishResponseDTO getReservedWishDetails(Long wishId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentEmail = authentication.getName();
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new UserNotFoundException());
+
+        Reservation reservation = reservationRepository.findByWish_Id(wishId)
+                .orElseThrow(() -> new ReservationNotFoundException("Бронювання не знайдено"));
+        boolean isParticipant = reservation.getParticipants().stream()
+                .anyMatch(p -> p.getUser() != null && p.getUser().getId().equals(currentUser.getId()));
+        if (!isParticipant) {
+            throw new AccessDeniedException("Доступ заборонено");
+        }
+
+        Wish wish = reservation.getWish();
+        Wishlist wishlist = wish.getWishlist();
+        boolean isOwner = wishlist.getUser().getEmail().equals(currentEmail);
+        return wishResponseMapper.toDTO(wish, currentUser.getId(), isOwner, true);
     }
 }
