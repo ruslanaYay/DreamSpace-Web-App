@@ -263,7 +263,9 @@ const handleCancelReservationConfirm = async () => {
     const token = localStorage.getItem('token');
     const isGroup = cancelModal.reservationType === "GROUP";
 
-    const url = `http://localhost:8085/api/reservations/${cancelModal.reservationId}`;
+  const url = isGroup
+      ? `http://localhost:8085/api/reservations/${cancelModal.reservationId}/leave`
+      : `http://localhost:8085/api/reservations/${cancelModal.reservationId}`;
 
     try {
       console.log("=== ТЕСТ СКАСУВАННЯ ===");

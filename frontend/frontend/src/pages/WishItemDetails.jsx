@@ -151,7 +151,9 @@ export const WishItemDetails = () => {
     };
 
     try {
-      const url = `http://localhost:8085/api/reservations/${item.reservationId}`;
+      const url = item.reservationType === 'GROUP'
+          ? `http://localhost:8085/api/reservations/${item.reservationId}/leave`
+          : `http://localhost:8085/api/reservations/${item.reservationId}`;
 
       const response = await fetch(url, {
         method: 'DELETE',

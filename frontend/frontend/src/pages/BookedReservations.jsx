@@ -83,8 +83,14 @@ export const BookedReservations = () => {
     setIsCanceling(true);
 
     const token = localStorage.getItem('token');
+
+    const isGroup = modalConfig.reservationType === "GROUP";
+    const url = isGroup
+        ? `http://localhost:8085/api/reservations/${modalConfig.reservationId}/leave`
+        : `http://localhost:8085/api/reservations/${modalConfig.reservationId}`;
+
     try {
-      const response = await fetch(`http://localhost:8085/api/reservations/${modalConfig.reservationId}`, {
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

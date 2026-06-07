@@ -184,7 +184,8 @@ export const ReserveWishModal = ({
                   currentParticipants: updatedParticipants,
                   maxParticipants: maxLimit,
                   isReserved: true, 
-                  isCurrentUserParticipant: true
+                  isCurrentUserParticipant: true,
+                  reservationId: resData.reservationId || wish.reservationId
                 };
               }
               return wish;
