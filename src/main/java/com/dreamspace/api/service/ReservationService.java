@@ -102,4 +102,41 @@ public class ReservationService {
 
         reservationRepository.delete(reservation);
     }
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<ReservationResponseDTO> getMyReservations(int page, int size) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            throw new AccessDeniedException("Увійдіть в обліковий запис");
+        }
+
+        String currentEmail = authentication.getName();
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new UserNotFoundException());
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+
+        org.springframework.data.domain.Page<Reservation> reservationPage =
+                reservationRepository.findAllByUserId(currentUser.getId(), pageable);
+
+        return reservationPage.map(reservation -> {
+
+            int currentParticipantsCount = reservation.getParticipants().size();
+
+            var wish = reservation.getWish();
+
+            var wishlist = wish.getWishlist();
+
+            return new ReservationResponseDTO(
+                    reservation.getId(),
+                    wish.getId(),
+                    wish.getName(),       // назва бажання
+                    wish.getImageUrl(),   // картинка бажання
+                    wishlist.getName(),   // назва списку бажань (вішліста)
+                    reservation.getReservationType(),
+                    reservation.getMaxParticipants(),
+                    currentParticipantsCount
+            );
+        });
+    }
 }

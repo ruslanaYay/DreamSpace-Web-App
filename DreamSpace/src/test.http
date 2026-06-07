@@ -249,3 +249,15 @@ Authorization: Bearer {{token}}
 
 # 🎯 Очікувана відповідь сервера: Status 404 Not Found
 # Body: { "message": "Бронювання не знайдено" }
+
+### ==========================================
+### Отримання списку моїх заброньованих бажань (Очікуємо 200 OK з JSON пагінацією)
+### ==========================================
+# Запит з дефолтними параметрами (page=0, size=4)
+GET http://localhost:8085/api/reservations/my
+Authorization: Bearer {{token}}
+
+###
+# Запит з іншим розміром сторінки
+GET http://localhost:8085/api/reservations/my?page=0&size=2
+Authorization: Bearer {{token}}
