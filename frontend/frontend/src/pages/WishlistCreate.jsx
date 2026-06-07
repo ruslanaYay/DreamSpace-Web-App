@@ -5,7 +5,6 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 export const WishlistCreate = () => {
   const navigate = useNavigate();
 
-  // Стан форми
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -13,9 +12,8 @@ export const WishlistCreate = () => {
     showBooked: false
   });
 
-  // Стан для валідації
   const [errors, setErrors] = useState({
-    name: false
+    name: ''
   });
 
   const handleChange = (e) => {
@@ -25,17 +23,17 @@ export const WishlistCreate = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // Прибираємо помилку при введенні тексту
-    if (name === 'name' && value.trim() !== '') {
-      setErrors({ name: false });
+    // Забезпечуємо зникнення повідомлення про помилку, як тільки користувач починає вносити зміни
+    if (name === 'name') {
+      setErrors({ name: '' });
     }
   };
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      setErrors({ name: true });
+      setErrors({ name: 'Це поле обов’язкове' });
       return;
     }
 
@@ -52,13 +50,20 @@ const handleSubmit = async (e) => {
       });
 
       if (response.status === 201) {
-        // Успішно створено — перенаправляємо на список
         navigate('/wishlists');
       } else if (response.status === 401) {
         alert("Сесія вичерпана, увійдіть знову");
         navigate('/login');
+      } else if (response.status === 400) {
+        // Додано логіку обробки статусу 400 Bad Request із виводом повідомлення від сервера
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.message) {
+          setErrors({ name: errorData.message });
+        } else {
+          alert("Помилка валідації даних");
+        }
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         alert(errorData.message || "Помилка при створенні вішліста");
       }
     } catch (err) {
@@ -70,8 +75,6 @@ const handleSubmit = async (e) => {
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 p-3" style={{ backgroundColor: '#F3F8FE' }}>
       <div className="card shadow-sm border-0 position-relative" style={{ maxWidth: '500px', width: '100%', borderRadius: '12px' }}>
-        
-        {/* Кнопка закриття (Хрестик) */}
         <button 
           onClick={() => navigate('/wishlists')}
           className="btn-close position-absolute top-0 end-0 m-3 shadow-none"
@@ -82,7 +85,6 @@ const handleSubmit = async (e) => {
           <h4 className="fw-bold mb-4">Створити новий вішліст</h4>
 
           <form onSubmit={handleSubmit} noValidate>
-            {/* Поле Назва */}
             <div className="mb-3">
               <label className="form-label fw-semibold">Назва *</label>
               <input
@@ -95,11 +97,10 @@ const handleSubmit = async (e) => {
                 style={{ backgroundColor: '#fdfdfd' }}
               />
               {errors.name && (
-                <div className="invalid-feedback">Це поле обов’язкове</div>
+                <div className="invalid-feedback">{errors.name}</div>
               )}
             </div>
 
-            {/* Поле Опис */}
             <div className="mb-3">
               <label className="form-label fw-semibold">Опис</label>
               <textarea
@@ -113,7 +114,6 @@ const handleSubmit = async (e) => {
               ></textarea>
             </div>
 
-            {/* Налаштування приватності */}
             <div className="mb-3">
               <label className="form-label fw-semibold">Налаштування приватності</label>
               <select
@@ -129,7 +129,6 @@ const handleSubmit = async (e) => {
               </select>
             </div>
 
-            {/* Чекбокс */}
             <div className="mb-4 form-check">
               <input
                 type="checkbox"
@@ -144,7 +143,6 @@ const handleSubmit = async (e) => {
               </label>
             </div>
 
-            {/* Кнопка створення */}
             <button 
               type="submit" 
               className="btn w-100 py-2 text-white fw-bold"
