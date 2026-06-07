@@ -207,7 +207,6 @@ Content-Type: application/json
 }
 
 ###
-# 🔴 ВАЖЛИВО: Скопіюй отриманий після логіну токен і встав його сюди замість тексту:
 @token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzgwNzg5NzEzLCJleHAiOjE3ODA4NzYxMTN9.k234UZvB53wIVCQAFqezH5PHizO_5I9HYEf7Aqcl56w
 
 
@@ -285,8 +284,7 @@ Content-Type: application/json
   "name": "Новий унікальний список"
 }
 
-# 🎯 Очікувана відповідь: Status 400 Bad Request
-# Body: {"message": "Вішліст з такою назвою вже існує"}
+
 
 
 ### ==========================================
@@ -303,3 +301,7 @@ Content-Type: application/json
 ### Отримати список усіх моїх вішлістів, щоб побачити їхні ID
 GET http://localhost:8085/api/wishlists
 Authorization: Bearer {{token}}
+
+### Скасування індивідуального бронювання (Тест)
+DELETE http://localhost:8085/api/reservations/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtYXJpaWEuYmVyZG55azFAbnVyZS51YSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzgwODM3MDYzLCJleHAiOjE3ODA5MjM0NjN9.arNcWFF81CPcpEEeGDy9EOp78F201hRNuzB8HxL2xEI
