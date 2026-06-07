@@ -62,7 +62,7 @@ export const ReserveWishModal = ({
         setEmailError("Це поле обов’язкове");
         hasError = true;
       } else if (!validateEmailFormat(reserveEmail)) {
-        setEmailError("Некоректний формат email");
+        setEmailError("Некоректна адреса електронної пошти");
         hasError = true;
       }
 
@@ -153,7 +153,7 @@ export const ReserveWishModal = ({
       setJoinEmailError("Поле обов'язкове для заповнення");
       return;
     } else if (!validateEmailFormat(joinEmail)) {
-      setJoinEmailError("Некоректний формат email");
+      setJoinEmailError("Некоректна адреса електронної пошти");
       return;
     }
 

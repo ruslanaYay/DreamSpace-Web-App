@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-export const CancelReservationModal = ({ show, onClose, onConfirm, isLoading }) => {
+export const CancelReservationModal = ({ show, onClose, onConfirm, isLoading, reservationType }) => {
   if (!show) return null;
+
+  // Текст змінюється автоматично залежно від типу бронювання з макетів
+  const modalText = reservationType === 'INDIVIDUAL'
+    ? 'Ви справді хочете скасувати бронювання для цього бажання?'
+    : 'Ви справді хочете покинути спільне бронювання для цього бажання?';
 
   return (
     <div 
@@ -15,7 +20,7 @@ export const CancelReservationModal = ({ show, onClose, onConfirm, isLoading }) 
         style={{ width: '576px', minHeight: '209px', height: 'auto', borderRadius: '16px', gap: '24px' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Кнопка Хрестик */}
+        {/* Кнопка Хрестик для закриття вікна без змін */}
         <button 
           className="btn border-0 position-absolute p-1 bg-transparent" 
           style={{ right: '20px', top: '16px' }}
@@ -25,17 +30,17 @@ export const CancelReservationModal = ({ show, onClose, onConfirm, isLoading }) 
           <i className="bi bi-x-lg text-muted" style={{ fontSize: '1.1rem' }}></i>
         </button>
 
-        {/* Текст контенту */}
+        {/* Контент повідомлення */}
         <div className="w-100 text-center mt-3">
           <h4 className="fw-bold mb-3" style={{ color: '#4C4C4C', fontSize: '24px', lineHeight: '29px' }}>
             Скасування бронювання
           </h4>
           <p className="mb-0 mx-auto ps-3 pe-3" style={{ color: '#4C4C4C', fontSize: '14px', lineHeight: '22px', maxWidth: '480px' }}>
-            Ви справді хочете покинути спільне бронювання для цього бажання?
+            {modalText}
           </p>
         </div>
 
-        {/* Кнопки дій */}
+        {/* Кнопки взаємодії */}
         <div className="d-flex justify-content-between w-100 px-3 mb-2" style={{ height: '40px', gap: '16px' }}>
           <button 
             className="btn border-0 d-flex align-items-center justify-content-center" 

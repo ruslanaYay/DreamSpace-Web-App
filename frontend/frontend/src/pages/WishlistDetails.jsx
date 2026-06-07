@@ -238,10 +238,9 @@ export const WishlistDetails = () => {
     e.stopPropagation();
   }
 
-  // Виведемо об'єкт у консоль, щоб точно знати, де лежить ID
   console.log("Клікнули на скасування бажання (WISH):", wish);
   
-  // Безпечно витягуємо ID та ТИП
+  // Шукаємо ID бронювання всюди, де воно може бути
   const rId = wish.reservationId || wish.reservation?.id || wish.reservation?.reservationId;
   const rType = wish.reservationType || wish.reservation?.type;
   
@@ -253,7 +252,7 @@ export const WishlistDetails = () => {
   });
 };
 
-  const handleCancelReservationConfirm = async () => {
+const handleCancelReservationConfirm = async () => {
     // Валідація на фронтенді (не пускаємо запит, якщо ID кривий)
     if (!cancelModal.reservationId || cancelModal.reservationId === "undefined" || cancelModal.reservationId === "null") {
       alert(`Критична помилка фронтенду:\nНе вдалося отримати ID бронювання з об'єкта бажання.\nID в стейті: ${cancelModal.reservationId}\nТип: ${cancelModal.reservationType}\n\nБудь ласка, перевірте вкладку Console (F12), що саме приходить з сервера.`);
@@ -264,9 +263,7 @@ export const WishlistDetails = () => {
     const token = localStorage.getItem('token');
     const isGroup = cancelModal.reservationType === "GROUP";
 
-    const url = isGroup 
-      ? `http://localhost:8085/api/reservations/${cancelModal.reservationId}/leave`
-      : `http://localhost:8085/api/reservations/${cancelModal.reservationId}`;
+    const url = `http://localhost:8085/api/reservations/${cancelModal.reservationId}`;
 
     try {
       console.log("=== ТЕСТ СКАСУВАННЯ ===");
