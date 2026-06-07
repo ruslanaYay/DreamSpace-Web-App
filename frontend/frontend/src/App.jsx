@@ -17,6 +17,7 @@ import { WishlistDetails } from './pages/WishlistDetails';
 import { WishItemDetails } from './pages/WishItemDetails';
 import { WishItemCreate } from './pages/WishItemCreate';
 import { Pagination } from './components/Pagination';
+import { BookedReservations } from './pages/BookedReservations';
 
 // Компонент-обгортка для захисту маршруту
 const ProtectedAdminRoute = ({ children }) => {
@@ -163,7 +164,7 @@ const AppContent = () => {
             <Route path="/wishlist/share/:shareToken/wish/:itemId" element={<WishItemDetails />}/>
             <Route path="/wishlists/:id/add-item" element={<WishItemCreate />} />
             <Route path="/wish-items/:itemId" element={<WishItemDetails />} />
-            <Route path="/booked" element={<div className="p-5">Сторінка Заброньованих</div>} />
+            <Route path="/booked" element={<BookedReservations />} />
             <Route path="/profile" element={<div className="p-5">Сторінка Профілю</div>} />
             <Route path="/admin" element={<ProtectedAdminRoute><Admin /></ProtectedAdminRoute>} />
             <Route path="*" element={<Navigate to="/" />} />
