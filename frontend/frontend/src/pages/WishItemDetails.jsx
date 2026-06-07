@@ -23,11 +23,17 @@ export const WishItemDetails = () => {
 
   // Стан для відображення інтегрованого ReserveWishModal
   const [showReserveModal, setShowReserveModal] = useState(false);
-  const [reserveModalMode, setReserveModalMode] = useState('RESERVE'); // 'RESERVE' або 'JOIN'
+  const [reserveModalMode, setReserveModalMode] = useState('RESERVE'); 
 
   // Стан для скасування спільного/одиночного бронювання
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+
+  // Визначаємо, чи прийшов користувач зі сторінки /booked
+  const isFromBooked = location.state?.fromBooked === true;
+  
+  // Використовуємо деструктуризований shareToken з useParams
+  const effectiveShareToken = shareToken || location.state?.token;
 
   const getPriorityIcon = (priority) => {
     switch (priority) {
@@ -55,9 +61,15 @@ export const WishItemDetails = () => {
       setLoading(true);
       let url;
 
-      if (shareToken) {
-        url = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes/${itemId}`;
+      // ВИЗНАЧЕННЯ ЕНДПОІНТУ НА БЕКЕНДІ:
+      if (isFromBooked) {
+        // Якщо користувач прийшов зі сторінки BookedReservation, робимо запит на API бронювань
+        url = `http://localhost:8085/api/reservations/my/wishes/${itemId}`;
+      } else if (effectiveShareToken) {
+        // Якщо перехід за прямим share-посиланням гостя
+        url = `http://localhost:8085/api/wishlists/share/${effectiveShareToken}/wishes/${itemId}`;
       } else {
+        // Пряме посилання для власника списку бажань
         url = `http://localhost:8085/api/wishes/${itemId}`;
       }
 
@@ -65,11 +77,15 @@ export const WishItemDetails = () => {
       const resData = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        if (shareToken) {
-          setItem(resData.wish || resData);
-          setIsOwner(resData.isOwner === true);
+        // Деякі ендпоінти загортають об'єкт у .wish, деякі повертають одразу об'єкт бажання
+        setItem(resData.wish || resData);
+        
+        // КОРЕКТНЕ НАЛАШТУВАННЯ ПРАВ ДОСТУПУ:
+        if (isFromBooked || effectiveShareToken) {
+          // Якщо прийшов з booked або share-лінку — це 100% гість
+          setIsOwner(false);
         } else {
-          setItem(resData);
+          // В іншому випадку це власник бажання
           setIsOwner(true);
         }
       } else {
@@ -84,7 +100,7 @@ export const WishItemDetails = () => {
 
   useEffect(() => {
     fetchWishData();
-  }, [itemId, shareToken]);
+  }, [itemId, shareToken, location.state]);
 
   useEffect(() => {
     const closeMenu = () => setActiveMenuOpen(false);
@@ -133,13 +149,12 @@ export const WishItemDetails = () => {
       });
       if (response.ok) {
         const updatedWish = await response.json();
-        const completedStatus = updatedWish.isCompleted !== undefined ? updatedWish.isCompleted : updatedWish[" isCompleted "];
+        const completedStatus = updatedWish.isCompleted !== undefined ? updatedWish.isCompleted : updatedWish["isCompleted"];
         setItem(prev => ({ ...prev, isCompleted: completedStatus }));
       }
     } catch (err) { console.error(err); }
   };
 
-  // Скасування участі у бронюванні через API
   const handleCancelReservation = async () => {
     if (isCanceling || !item || !item.reservationId) return;
     setIsCanceling(true);
@@ -164,7 +179,7 @@ export const WishItemDetails = () => {
 
       if (response.ok) {
         setShowCancelModal(false);
-        fetchWishData(); // Оновлюємо дані, щоб прибрати плашки бронювання
+        fetchWishData(); 
       } else {
         alert(resData.message || "Сталася помилка при скасуванні участі");
         setShowCancelModal(false);
@@ -177,7 +192,6 @@ export const WishItemDetails = () => {
     }
   };
 
-  
   const handleReserveClick = () => {
     const authToken = localStorage.getItem('token');
     if (!authToken) {
@@ -268,6 +282,7 @@ export const WishItemDetails = () => {
                   {item.name}
                 </h1>
                 
+                {/* Меню редагування показується виключно власнику */}
                 {isOwner && (
                   <div className="position-relative flex-shrink-0" style={{ marginTop: '10px' }}>
                     <button 
@@ -342,16 +357,18 @@ export const WishItemDetails = () => {
                   </div>
               )}
 
+              {/* Кнопка «Виконати» показується ТІЛЬКИ власнику */}
               {isOwner && (
                   <button
                     className={`btn mt-2 w-100 d-flex align-items-center justify-content-center transition-all ${item.isCompleted ? 'btn-wish-completed' : 'btn-wish-action'}`}
                     style={{ height: '40px', borderRadius: '8px', fontWeight: '600', border: 'none' }}
                     onClick={toggleStatus}
                   >
-                    {item.isCompleted ? 'Зробити активним' : 'Виконати'}
+                    {item.isCompleted ? 'Зробити active' : 'Виконати'}
                   </button>
               )}
 
+              {/* Блок інтерфейсу та кнопок для ГОСТЯ */}
               {!isOwner && !item.isCompleted && (
                 <>
                   {!isWishReserved && (
@@ -364,17 +381,10 @@ export const WishItemDetails = () => {
                     </button>
                   )}
 
-                  {/* Список учасників спільного бронювання */}
                   {hasGroupReservation && item.participantEmails && item.participantEmails.length > 0 && (
                     <div className="mt-4 mb-4">
                       <h6 className="fw-bold mb-2" style={{ color: '#4C4C4C' }}>Учасники спільного бронювання</h6>
-                      <div 
-                        className="bg-white border p-2 px-3 w-100" 
-                        style={{ 
-                          borderRadius: '8px', 
-                          boxSizing: 'border-box'
-                        }} 
-                      >
+                      <div className="bg-white border p-2 px-3 w-100" style={{ borderRadius: '8px', boxSizing: 'border-box' }}>
                         <div className="d-flex flex-column gap-2">
                           {item.participantEmails.map((email, index) => (
                             <span key={index} className="text-muted text-break" style={{ display: 'block', fontSize: '14px' }}>
@@ -386,7 +396,6 @@ export const WishItemDetails = () => {
                     </div>
                   )}
 
-                  {/* Умова !isGroupFilled: Кнопка «Долучитися» ховається, якщо група заповнена */}
                   {hasGroupReservation && !isGroupFilled && !item.isCurrentUserParticipant && (
                     <button
                       className="btn mt-2 w-100 d-flex align-items-center justify-content-center text-white"
@@ -397,8 +406,8 @@ export const WishItemDetails = () => {
                     </button>
                   )}
 
-                  {/* Кнопка «Скасувати бронювання» або одиночне скасування */}
-                  {((hasGroupReservation && item.isCurrentUserParticipant) || (hasIndividualReservation && item.isCurrentUserParticipant)) && (
+                  {/* Кнопка скасування бронювання (або виходу з групи) для поточного користувача */}
+                  {((hasGroupReservation && item.isCurrentUserParticipant) || (hasIndividualReservation && item.isCurrentUserParticipant) || isFromBooked) && (
                     <button
                       className="btn mt-2 w-100 d-flex align-items-center justify-content-center border-0"
                       style={{ 
@@ -421,12 +430,12 @@ export const WishItemDetails = () => {
           </div>
         </div>
 
-        {/* МОДАЛЬНЕ ВІКНО СТВОРЕННЯ/ДОЛУЧЕННЯ ДО БРОНЮВАННЯ */}
+        {/* Модальні вікна бронювання */}
         <ReserveWishModal
           show={showReserveModal}
           initialMode={reserveModalMode}
           wishId={itemId}
-          shareToken={shareToken}
+          shareToken={effectiveShareToken} 
           selectedWish={item}
           onClose={() => setShowReserveModal(false)}
           onSuccess={() => {
@@ -435,15 +444,15 @@ export const WishItemDetails = () => {
           }}
         />
 
-        {/* НОВЕ ІНТЕГРОВАНЕ МОДАЛЬНЕ ВІКНО СКАСУВАННЯ БРОНЮВАННЯ */}
         <CancelReservationModal
           show={showCancelModal}
-          reservationType={item.reservationType} // 'INDIVIDUAL' або 'GROUP'
+          reservationType={item.reservationType || 'INDIVIDUAL'} 
           isLoading={isCanceling}
           onClose={() => setShowCancelModal(false)}
           onConfirm={handleCancelReservation}
         />
 
+        {/* Модалки редагування/видалення доступні ТІЛЬКИ власнику */}
         {isOwner && (
             <>
               <EditWishItemModal

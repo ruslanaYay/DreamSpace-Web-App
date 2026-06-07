@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pagination } from '../components/Pagination';
-import { CancelReservationModal } from '../components/CancelReservationModal'; // Підключаємо твій компонент модалки
+import { CancelReservationModal } from '../components/CancelReservationModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
@@ -83,7 +83,6 @@ export const BookedReservations = () => {
     setIsCanceling(true);
 
     const token = localStorage.getItem('token');
-
     const isGroup = modalConfig.reservationType === "GROUP";
     const url = isGroup
         ? `http://localhost:8085/api/reservations/${modalConfig.reservationId}/leave`
@@ -125,6 +124,20 @@ export const BookedReservations = () => {
     setModalConfig({ show: false, reservationId: null, reservationType: 'INDIVIDUAL' });
   };
 
+  // ОНОВЛЕНО: Спрощено навігацію на делікатний роут деталізації
+  const handleCardClick = (item) => {
+    const wishId = item.wishId || item.id;
+    
+    // Передаємо `fromBooked: true` у state, щоб компонент WishItemDetails 
+    // робив запит до спеціального гостьового API
+    navigate(`/wish-items/${wishId}`, { 
+      state: { 
+        fromBooked: true,
+        token: item.shareToken // Передаємо токен, якщо він є в об'єкті
+      } 
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="d-flex align-items-center justify-content-center min-vh-100" style={{ backgroundColor: '#F8F9FA' }}>
@@ -134,150 +147,118 @@ export const BookedReservations = () => {
   }
 
   return (
-    <div 
-  className="flex-grow-1 p-0 min-vh-100 ms-4 mt-2" 
-  style={{ 
-    backgroundColor: '#F3F8FE' 
-  }}
->
-  {/* ОСНОВНЕ ЗАПОВНЕННЯ СТОРІНКИ: Контейнер, який створює біле тло або обмежує контент */}
-  <div 
-    className="w-100 d-flex flex-column align-items-start"
-    style={{
-      backgroundColor: '#F3F8FE', 
-      // Якщо за макетом сама робоча область під контентом має бути білою, розкоментуй рядки нижче:
-      // backgroundColor: '#FFFFFF', 
-      // padding: '40px', 
-      // borderRadius: '16px'
-    }}
-  >
-    
-    {/* ЗАГОЛОВОК СТОРІНКИ — Рендериться завжди вгорі */}
-    <h2 
-      className="fw-bold m-0" 
-      style={{ 
-        color: '#4C4C4C', 
-        fontSize: '2.25rem', 
-        lineHeight: '1.0',
-        textAlign: 'left'
-      }}
-    >
-      Заброньовані бажання
-    </h2>
-
-    {reservedItems.length === 0 ? (
-      /* СТАН: НЕМАЄ БРОНЬОВАНЬ */
-      <div className="w-100 d-flex flex-column align-items-start" style={{ marginTop: '32px' }}>
+    <div className="flex-grow-1 p-0 min-vh-100 ms-4 mt-2" style={{ backgroundColor: '#F3F8FE' }}>
+      <div className="w-100 d-flex flex-column align-items-start" style={{ backgroundColor: '#F3F8FE' }}>
         
-        {/* Текст статусу: відступ точно 32px від заголовка */}
-        <p 
-          className="m-0" 
-          style={{ 
-            color: '#4C4C4C', 
-            fontSize: '1.15rem', 
-            lineHeight: '1.2',
-            textAlign: 'left'
-          }}
+        <h2 
+          className="fw-bold m-0" 
+          style={{ color: '#4C4C4C', fontSize: '2.25rem', lineHeight: '1.0', textAlign: 'left' }}
         >
-          У вас немає заброньованих бажань
-        </p>
-        
-        {/* Коробка empty_present чітко по центру */}
-        <div className="w-100 d-flex justify-content-center align-items-center" style={{ marginTop: '50px' }}>
-          <img 
-            src={emptyPresentImg} 
-            alt="Немає存бронювань" 
-            style={{ maxWidth: '420px', width: '100%', height: 'auto' }} 
-          />
-        </div>
-      </div>
-    ) : (
-      /* СТАН: Є БРОНЬОВАНІ БАЖАННЯ */
-      <div className="w-100 d-flex flex-column align-items-start" style={{ marginTop: '32px' }}>
-        
-        {/* Список карток */}
-        <div className="d-flex flex-column gap-3 w-100 align-items-start">
-          {reservedItems.map((item) => (
-            <div 
-              key={item.wishId || item.id}
-              className="card border-0 shadow-sm p-4 d-flex flex-row align-items-center justify-content-between"
-              onClick={() => navigate(`/wishlists/${item.wishlistId || 'share'}`)}
-              style={{ 
-                width: '1076px', 
-                height: '182px', 
-                borderRadius: '16px', 
-                cursor: 'pointer', 
-                backgroundColor: '#ffffff' /* Самі картки залишаються білими на сірому фоні */
-              }}
+          Заброньовані бажання
+        </h2>
+
+        {reservedItems.length === 0 ? (
+          <div className="w-100 d-flex flex-column align-items-start" style={{ marginTop: '32px' }}>
+            <p 
+              className="m-0" 
+              style={{ color: '#4C4C4C', fontSize: '1.15rem', lineHeight: '1.2', textAlign: 'left' }}
             >
-              {/* Ліва частина: Зображення + Інформація */}
-              <div className="d-flex align-items-start gap-4"> {/* Змінено center на start для вирівнювання по верху */}
-                
-  {/* Зображення картки: 134х134 */}
-  <div 
-    className="d-flex align-items-center justify-content-center bg-light"
-    style={{ width: '134px', height: '134px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}
-  >
-    {item.imageUrl ? (
-      <img src={item.imageUrl} alt={item.wishName} className="w-100 h-100 object-cover" />
-    ) : (
-      <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-secondary">
-        <i className="bi bi-image" style={{ fontSize: '2.5rem', color: '#ccc' }}></i>
-      </div>
-    )}
-  </div>
-
-  {/* Текстовий опис бажання */}
-  <div className="d-flex flex-column justify-content-start"> {/* Змінено center на start, щоб підняти текст вгору */}
-    <h4 className="fw-bold mb-1" style={{ color: '#4C4C4C', fontSize: '20px', lineHeight: '1.2' }}>
-      {item.wishName || "Без назви"}
-    </h4>
-    <span className="text-muted mb-2" style={{ fontSize: '15px' }}>
-      {item.wishlistName || "Мій день народження"}
-    </span>
-    
-    {item.reservationType === "GROUP" && (
-      <span className="text-secondary mt-1" style={{ fontSize: '14px', fontWeight: '500' }}>
-        Спільне: {item.currentParticipants ?? item.currentParticipantsCount ?? item.participantsCount ?? 3} з {item.maxParticipants ?? 3}
-      </span>
-    )}
-  </div>
-</div>
-
-              {/* Права частина: Кнопка "Скасувати" */}
-              <button
-                onClick={(e) => handleCancelClick(e, item)}
-                className="btn d-flex align-items-center justify-content-center shadow-none"
-                style={{ 
-                  width: '107px', 
-                  height: '40px', 
-                  border: '1px solid rgba(220, 54, 46, 0.8)', 
-                  backgroundColor: 'rgba(244, 129, 124, 0.48)', 
-                  color: '#f5f5f5',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600'
-                }}
-              >
-                Скасувати
-              </button>
+              У вас немає заброньованих бажань
+            </p>
+            
+            <div className="w-100 d-flex justify-content-center align-items-center" style={{ marginTop: '50px' }}>
+              <img 
+                src={emptyPresentImg} 
+                alt="Немає бронювань" 
+                style={{ maxWidth: '420px', width: '100%', height: 'auto' }} 
+              />
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="w-100 d-flex flex-column align-items-start" style={{ marginTop: '32px' }}>
+            
+            <div className="d-flex flex-column gap-3 w-100 align-items-start">
+              {reservedItems.map((item) => (
+                <div 
+                  key={item.wishId || item.id}
+                  className="card border-0 shadow-sm p-4 d-flex flex-row align-items-center justify-content-between"
+                  onClick={() => handleCardClick(item)}
+                  style={{ 
+                    width: '1076px', 
+                    height: '182px', 
+                    borderRadius: '16px', 
+                    cursor: 'pointer', 
+                    backgroundColor: '#ffffff' 
+                  }}
+                >
+                  {/* Ліва частина: Зображення + Інформація */}
+                  <div className="d-flex align-items-start gap-4">
+                    
+                    <div 
+                      className="d-flex align-items-center justify-content-center bg-light"
+                      style={{ width: '134px', height: '134px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}
+                    >
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.wishName} className="w-100 h-100 object-cover" />
+                      ) : (
+                        <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-secondary">
+                          <i className="bi bi-image" style={{ fontSize: '2.5rem', color: '#ccc' }}></i>
+                        </div>
+                      )}
+                    </div>
 
-        {/* Блок пагінації */}
-        <div className="d-flex justify-content-center w-100 mt-5" style={{ maxWidth: '1076px' }}>
-          <Pagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+                    <div className="d-flex flex-column justify-content-start">
+                      <h4 className="fw-bold mb-1" style={{ color: '#4C4C4C', fontSize: '20px', lineHeight: '1.2' }}>
+                        {item.wishName || "Без назви"}
+                      </h4>
+                      <span className="text-muted mb-2" style={{ fontSize: '15px' }}>
+                        {item.wishlistName || "Мій день народження"}
+                      </span>
+                      
+                      {/* ОНОВЛЕНО: Чітка відповідність полів до DTO з бекенду (currentParticipantsCount) */}
+                      {item.reservationType === "GROUP" && (
+                        <span className="text-secondary mt-1" style={{ fontSize: '14px', fontWeight: '500' }}>
+                          Спільне: {item.currentParticipantsCount ?? item.currentParticipants ?? 0} з {item.maxParticipants ?? 1}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
+                  {/* Права частина: Кнопка "Скасувати" */}
+                  <button
+                    onClick={(e) => handleCancelClick(e, item)}
+                    className="btn d-flex align-items-center justify-content-center shadow-none"
+                    style={{ 
+                      width: '107px', 
+                      height: '40px', 
+                      border: '1px solid rgba(220, 54, 46, 0.8)', 
+                      backgroundColor: 'rgba(244, 129, 124, 0.48)', 
+                      color: '#f5f5f5',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Скасувати
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Блок пагінації */}
+            <div className="d-flex justify-content-center w-100 mt-5" style={{ maxWidth: '1076px' }}>
+              <button className="d-none"></button> {/* Технічний хак для уникнення зсувів */}
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+
+          </div>
+        )}
       </div>
-    )}
-  </div>
-  {/* Компонент модального вікна для скасування */}
+
       <CancelReservationModal 
         show={modalConfig.show}
         isLoading={isCanceling}
@@ -285,6 +266,6 @@ export const BookedReservations = () => {
         onClose={closeModal}
         onConfirm={handleCancelConfirm}
       />
-</div>
+    </div>
   );
 };
