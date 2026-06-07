@@ -13,9 +13,15 @@ import java.util.Optional;
 @Repository
 public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
     Page<Wishlist> findAllByUser(User user, Pageable pageable);
+
     Optional<Wishlist> findById(Long id);
+
     // пошуку за частковим збігом назви без урахування регістру
     Page<Wishlist> findAllByUserAndNameContainingIgnoreCase(User user, String name, Pageable pageable);
+
     Optional<Wishlist> findByShareToken(String shareToken);
+
     List<Wishlist> findAllByUserOrderByCreatedAtDesc(User user);
+
+    Optional<Wishlist> findByNameAndUser(String name, User user);
 }

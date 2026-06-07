@@ -261,3 +261,45 @@ Authorization: Bearer {{token}}
 # Запит з іншим розміром сторінки
 GET http://localhost:8085/api/reservations/my?page=0&size=2
 Authorization: Bearer {{token}}
+
+
+### ==========================================
+### 1. Створення вішліста з унікальною назвою (Має повернути 201 Created або 200 OK)
+### ==========================================
+POST http://localhost:8085/api/wishlists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Новий унікальний список"
+}
+
+### ==========================================
+### 2. Повторна спроба створити вішліст з ТІЄЮ Ж назвою (Очікуємо 400 Bad Request)
+### ==========================================
+POST http://localhost:8085/api/wishlists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Новий унікальний список"
+}
+
+# 🎯 Очікувана відповідь: Status 400 Bad Request
+# Body: {"message": "Вішліст з такою назвою вже існує"}
+
+
+### ==========================================
+### 3. Спроба перейменувати інший вішліст на вже існуючу назву (Очікуємо 400 Bad Request)
+### ==========================================
+# Ми беремо вішліст №2 і намагаємося вкрасти назву у нашого ж вішліста №1
+PUT http://localhost:8085/api/wishlists/33
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Новий унікальний список"
+}
+### Отримати список усіх моїх вішлістів, щоб побачити їхні ID
+GET http://localhost:8085/api/wishlists
+Authorization: Bearer {{token}}

@@ -125,11 +125,16 @@ public class WishlistServiceImpl implements WishlistService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException());
 
+        wishlistRepository.findByNameAndUser(dto.getName(), user)
+                .ifPresent(existingWishlist -> {
+                    throw new com.dreamspace.api.exception.BadRequestException("Вішліст з такою назвою вже існує");
+                });
+
         // створення нової сутності Wishlist для збереження в БД
         Wishlist wishlist = new Wishlist();
         wishlist.setName(dto.getName());
         wishlist.setDescription(dto.getDescription());
-        wishlist.setUser(user); // Фізична прив'язка до поточного користувача
+        wishlist.setUser(user); // Fizична прив'язка до поточного користувача
         wishlist.setCreatedAt(LocalDateTime.now()); // Час створення вішліста
 
         // Перевірка параметрів приватності (значення за замовчуванням — LINK)
@@ -173,6 +178,14 @@ public class WishlistServiceImpl implements WishlistService {
 
         if (!wishlist.getUser().getEmail().equals(currentUserEmail)) {
             throw new AccessDeniedException();
+        }
+
+        var duplicateOptional = wishlistRepository.findByNameAndUser(dto.getName(), wishlist.getUser());
+        if (duplicateOptional.isPresent()) {
+
+            if (!duplicateOptional.get().getId().equals(id)) {
+                throw new com.dreamspace.api.exception.BadRequestException("Вішліст з такою назвою вже існує");
+            }
         }
 
         wishlist.setName(dto.getName());
