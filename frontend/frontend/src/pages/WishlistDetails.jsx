@@ -93,7 +93,7 @@ export const WishlistDetails = () => {
       
       // ВИПРАВЛЕНО: Перевірка умови також переведена на currentSize замість initialSize
       if (page === 0 && calculatedIsOwner && currentSize === 15 && shareToken) {
-        const correctWishesUrl = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes?page=${page}&size=14`;
+        const correctWishesUrl = `http://localhost:8085/api/wishlists/share/${shareToken}/wishes?page=${page}&size=15`;
         const correctWishesRes = await fetch(correctWishesUrl, { method: 'GET', headers });
         if (correctWishesRes.ok) {
           wishesPageData = await correctWishesRes.json();
@@ -510,7 +510,7 @@ export const WishlistDetails = () => {
             </div>
           );
         })}
-        {currentPage === 0 && !shareToken && (
+        {currentPage === 0 && totalPages > 1 && (
         <div 
           className="d-flex align-items-center justify-content-between px-5 position-relative overflow-hidden shadow-sm animate-fade-in" 
           style={{ 

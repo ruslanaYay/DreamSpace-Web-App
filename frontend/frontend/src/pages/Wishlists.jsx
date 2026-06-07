@@ -208,7 +208,7 @@ export const Wishlists = () => {
         )}
 
         {/* ОБЛАСТЬ ЗІРКИ ПОВЕРНУТА НА ПЕРШУ СТОРІНКУ З ТОЧНИМ РОЗМІРОМ 831х347 */}
-        {currentPage === 0 && searchTerm === "" && (
+        {currentPage === 0 && searchTerm === "" && totalPages > 1 && (
           <div 
             className="d-flex align-items-center justify-content-between px-5 position-relative overflow-hidden shadow-sm animate-fade-in" 
             style={{ 
