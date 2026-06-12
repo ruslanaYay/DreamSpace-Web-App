@@ -246,7 +246,8 @@ export const BookedReservations = () => {
             </div>
 
             {/* Блок пагінації */}
-            <div className="d-flex justify-content-center w-100 mt-5" style={{ maxWidth: '1076px' }}>
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-center w-100 mt-5" style={{ maxWidth: '1076px' }}>
               <button className="d-none"></button> {/* Технічний хак для уникнення зсувів */}
               <Pagination 
                 currentPage={currentPage}
@@ -254,6 +255,7 @@ export const BookedReservations = () => {
                 onPageChange={setCurrentPage}
               />
             </div>
+            )}
 
           </div>
         )}

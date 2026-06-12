@@ -197,7 +197,8 @@ export const WishlistDetails = () => {
     e.preventDefault(); e.stopPropagation();
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/login');
+      // ПЕРЕДАЄМО ПОТОЧНИЙ ШЛЯХ У STATE ДЛЯ ПОВЕРНЕННЯ ПІСЛЯ LOGIN
+      navigate('/login', { state: { from: window.location.pathname } });
       return;
     }
     setReserveModalConfig({
@@ -212,7 +213,8 @@ export const WishlistDetails = () => {
     e.preventDefault(); e.stopPropagation();
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/login');
+      // ПЕРЕДАЄМО ПОТОЧНИЙ ШЛЯХ У STATE ДЛЯ ПОВЕРНЕННЯ ПІСЛЯ LOGIN
+      navigate('/login', { state: { from: window.location.pathname } });
       return;
     }
     setReserveModalConfig({
@@ -286,7 +288,12 @@ const handleCancelReservationConfirm = async () => {
       // --- 1. ОБРОБКА ПОМИЛОК АВТОРИЗАЦІЇ ТА ДОСТУПУ ---
       if (response.status === 401) {
         alert("Увійдіть в обліковий запис для виконання цієї дії.");
-        navigate('/login');
+        // Очищаємо токен, оскільки він застарів (тригерув 401)
+        localStorage.removeItem('token'); 
+  
+        setTimeout(() => {
+          navigate('/login', { state: { from: window.location.pathname } });
+        }, 100);
         return;
       }
 
