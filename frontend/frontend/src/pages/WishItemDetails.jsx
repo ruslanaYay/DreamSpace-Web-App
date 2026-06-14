@@ -371,7 +371,7 @@ export const WishItemDetails = () => {
                     style={{ height: '40px', borderRadius: '8px', fontWeight: '600', border: 'none' }}
                     onClick={toggleStatus}
                   >
-                    {item.isCompleted ? 'Зробити active' : 'Виконати'}
+                    {item.isCompleted ? 'Зробити активним' : 'Виконати'}
                   </button>
               )}
 
